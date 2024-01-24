@@ -17,7 +17,7 @@ namespace Cecytek
                 });
 
             //Cadena conexion PostgreSQL
-            string CadenaPostGreSQL = "Host=localhost;Port=5432;Database=CECYTEK;Username=postgres;Password=123";
+            string CadenaPostGreSQL = "Host=localhost;Port=5432;Database=Cecytek;Username=postgres;Password=123";
 
             builder.Services.AddDbContext<CecytekContext>(options =>
             {
@@ -31,7 +31,7 @@ namespace Cecytek
     		builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
-
+            builder.Services.AddBlazorBootstrap();
             return builder.Build();
         }
     }

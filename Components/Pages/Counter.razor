@@ -1,16 +1,91 @@
 ﻿@page "/counter"
+@inject CecytekContext Contexto
 
-<h1>Counter</h1>
+@if (ListaGrados?.Count > 0)
+{
+    <div class="d-flex flex-wrap" style="max-width: 40vw">
+        @foreach (var Carrera in ListaCarreras)
+        {
+            <div class="m-2" style="width: 30vw;">
+                <Card style="width: 30vw;">
+                    <CardBody>
+                        <CardTitle> @Carrera.nombrecarrera  </CardTitle>
+                        <Accordion class="m-2">
+                            <AccordionItem>
+                                <TitleTemplate>
+                                    Grados Activos
+                                </TitleTemplate>
+                                <Content>
+                                    @foreach (var Grado in ListaGrados)
+                                    {
+                                        <Button Color="ButtonColor.Primary" class="m-1" Size="Size.Small" @onclick="() => MostrarTexto(Grado.grado, Carrera.idcarrera)">
+                                            @Grado.grado
+                                        </Button>
+                                    }
+                                </Content>
+                            </AccordionItem>
+                        </Accordion>
+                    </CardBody>
+                </Card>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <MensajeSinRegistros />
+}
 
-<p role="status">Current count: @currentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
 
 @code {
-    private int currentCount = 0;
+    private List<Alumnos?> ListaGrados { get; set; }
+    private List<Carreras> ListaCarreras { get; set; }
+    private List<Alumnos?> GruposActivos { get; set; }
 
-    private void IncrementCount()
+
+    protected override async Task OnInitializedAsync()
     {
-        currentCount++;
+        await ObtenerCarreras();
+        await ObtenerGradosActivos();
+
     }
+
+    private async Task ObtenerGradosActivos()
+    {
+        //Trae un alumno de cada Semestre sin repetir
+        ListaGrados = await Contexto.Alumnos
+            .GroupBy(x => x.grado)
+            .Select(x => x.FirstOrDefault())
+            .ToListAsync();
+    }
+
+    private async Task ObtenerCarreras()
+    {
+        ListaCarreras = await Contexto.Carreras.ToListAsync();
+    }
+
+    private async Task MostrarTexto(Grados grado, int carrera)
+    {
+        await ObtenerGruposActivos(grado, carrera);
+    }
+
+    private async Task ObtenerGruposActivos(Grados grado, int carrera)
+    {
+        //Trae un alumno de cada grupo de la carrera y grado seleccionado
+        GruposActivos = await Contexto.Alumnos
+                    .Where(x => x.grado == grado && x.idcarrera == carrera)
+                    .GroupBy(x => x.grupo)
+                    .Select(x => x.FirstOrDefault())
+                    .ToListAsync();
+        //Muestra en un display Alert el grado, la carrea y el grupo, por ejemplo ° A de la carrera de Ing. en Sistemas
+        string mensaje = "";
+        foreach (var item in GruposActivos)
+        {
+            mensaje += "° " + item.grupo + " de la carrera de " + Contexto.Carreras.Where(x => x.idcarrera == item.idcarrera).FirstOrDefault().nombrecarrera + "\n";
+        }
+        await Application.Current.MainPage.DisplayAlert("Grupos Activos", mensaje, "Ok");
+    }
+
+
 }

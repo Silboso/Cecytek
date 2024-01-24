@@ -12,6 +12,12 @@ namespace Cecytek.Context
         
         public DbSet<TipoPago> TipoPago { get; set; }
 
+        public DbSet<Recibos> Recibos { get; set; }
+
+        public DbSet<Alumnos> Alumnos { get; set; }
+
+        public DbSet<Carreras> Carreras { get; set; }
+
         public CecytekContext(DbContextOptions<CecytekContext> options) : base(options) { }
     }
 }

@@ -24,6 +24,8 @@ namespace Cecytek.Models
         public string nombrepago { get; set; }
         [Required]
         public decimal monto { get; set; }
+
+
         
     }
 }
