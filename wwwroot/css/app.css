@@ -1,4 +1,6 @@
-﻿html, body {
+﻿@import url('bootstrap-icons/font/bootstrap-icons.css');
+
+html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 

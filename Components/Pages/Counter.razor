@@ -1,5 +1,7 @@
 ﻿@page "/counter"
 @inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+
 
 @if (ListaGrados?.Count > 0)
 {
@@ -49,25 +51,25 @@
     </div>
     @if (GruposActivos?.Count > 0 && Acordeon > 0)
     {
-        <Card class="m-2">
-            <CardTitle>
-                Seleccione el grupo:  &nbsp;
-            </CardTitle>
-            <div class="d-flex">
-                @foreach (var item in GruposActivos)
-                {
-                    <Button Color="ButtonColor.Primary" class="m-1" Size="Size.Medium">
-                        @foreach (var carrera in ListaCarreras)
-                        {
-                            if (carrera.idcarrera == item.idcarrera)
+        <Card class="mb-2">
+            <CardTitle>&nbsp; Seleccione el grupo:</CardTitle>
+            <Card class="m-2">
+                <div class="d-flex">
+                    @foreach (var item in GruposActivos)
+                    {
+                        <Button Color="ButtonColor.Primary" class="m-1" Size="Size.Medium" @onclick="() => Navegar(item.grado.GetHashCode(), item.idcarrera, item.grupo)">
+                            @foreach (var carrera in ListaCarreras)
                             {
-                                @carrera.nombrecarrera
+                                if (carrera.idcarrera == item.idcarrera)
+                                {
+                                    @carrera.nombrecarrera
+                                }
                             }
-                        }
-                        &nbsp;   @item.grado @item.grupo
-                    </Button>
-                }
-            </div>
+                            &nbsp;   @item.grado @item.grupo
+                        </Button>
+                    }
+                </div>
+            </Card>
         </Card>
     }
 }
@@ -131,6 +133,11 @@ else
     private void ReducirContador()
     {
         Acordeon -= 1;
+    }
+
+    private void Navegar(int grado, int carrera, string grupo)
+    {
+        NavigationManager.NavigateTo("/Alumnos/Index/" + grado + "/" + carrera + "/" + grupo);
     }
 
 

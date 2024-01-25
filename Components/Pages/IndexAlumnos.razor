@@ -1,0 +1,106 @@
+﻿@page "/Alumnos/Index/{Grado:int}/{Carrera:int}/{Grupo}"
+@inject CecytekContext Contexto
+
+
+<TituloPagina Titulo="@Titulo"></TituloPagina>
+
+<!--Buscar el alumno por nombre o por numero de control-->
+<InputText @bind-Value="Busqueda" @oninput="BuscarAlumno" placeholder="Buscar alumno" class="m-2" />
+
+
+@if (ListaAlumnos?.Count > 0)
+{
+    <table class="table table-striped table-hover table-responsive">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">No. Control</th>
+                <th scope="col">Nombre del Alumno</th>
+                <th scope="col">Grupo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Alumno in ListaAlumnos.Skip((currentPageNumber - 1) * itemsPerPage).Take(itemsPerPage))
+            {
+                <tr>
+                    <!-- Muestra la posicion en la lista-->
+                    <th scope="row">@(ListaAlumnos.IndexOf(Alumno) + 1)</th>
+                    <th scope="row">@Alumno.nocontrol</th>
+                    <td>@Alumno.nombrealumno</td>
+                    <td>@Alumno.grupo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center">
+        <!-- Agrega el componente de paginación -->
+        <Pagination ActivePageNumber="@currentPageNumber"
+                    TotalPages="totalPages"
+                    PageChanged="onPageChangedAsync"
+                    FirstLinkIcon="IconName.ChevronDoubleLeft"
+                    PreviousLinkIcon="IconName.ChevronLeft"
+                    NextLinkIcon="IconName.ChevronRight"
+                    LastLinkIcon="IconName.ChevronDoubleRight" />
+    </div>
+}
+else
+{
+    <MensajeSinRegistros />
+}
+
+
+@code {
+    [Parameter] public int Grado { get; set; }
+    [Parameter] public int Carrera { get; set; }
+    [Parameter] public string Grupo { get; set; }
+    private string Titulo { get; set; }
+    private string SGrado { get; set; }
+    private string SCarrera { get; set; }
+    private List<Alumnos> ListaAlumnos { get; set; }
+    private string Busqueda { get; set; }
+    private int currentPageNumber = 1;
+    private int itemsPerPage = 15; // Cantidad de registros por página
+    int totalPages => (int)Math.Ceiling(ListaAlumnos.Count / (double)itemsPerPage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        //Busca el nombre de la carrera
+        SCarrera = Contexto.Carreras.Where(x => x.idcarrera == Carrera).Select(x => x.nombrecarrera).FirstOrDefault();
+        //Construye el titulo "1° A Formacion Basica"
+        Titulo = SCarrera + " " + Grado + "° " + Grupo;
+        //Trae la lista de alumnos que pertenecen al grupo seleccionado organizados alfabeticamente
+        ListaAlumnos = ListaAlumnos = await Contexto.Alumnos
+                .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
+                .OrderBy(x => x.nombrealumno)
+                .ToListAsync();
+    }
+    private async Task BuscarAlumno(ChangeEventArgs e)
+    {
+        //Convierte en mayusculas el texto ingresado en el campo de busqueda
+        e.Value = e.Value.ToString().ToUpper();
+        //Si el campo de busqueda esta vacio, regresa la lista de alumnos completa
+        if (string.IsNullOrEmpty(e.Value.ToString()))
+        {
+            ListaAlumnos = await Contexto.Alumnos
+                .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
+                .OrderBy(x => x.nombrealumno)
+                .ToListAsync();
+        }
+        else
+        {
+            //Si el campo de busqueda no esta vacio, busca el alumno por nombre o por numero de control
+            ListaAlumnos = await Contexto.Alumnos
+                .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo && (x.nombrealumno.Contains(e.Value.ToString()) || x.nocontrol.Contains(e.Value.ToString())))
+                .OrderBy(x => x.nombrealumno)
+                .ToListAsync();
+        }
+
+    }
+
+    private async Task onPageChangedAsync(int newPageNumber)
+    {
+        currentPageNumber = newPageNumber;
+        StateHasChanged(); // Asegúrate de forzar la actualización de la interfaz de usuario
+    }
+}
