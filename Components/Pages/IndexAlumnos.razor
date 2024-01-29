@@ -94,6 +94,7 @@ else
                 .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo && (x.nombrealumno.Contains(e.Value.ToString()) || x.nocontrol.Contains(e.Value.ToString())))
                 .OrderBy(x => x.nombrealumno)
                 .ToListAsync();
+         currentPageNumber = 1;
         }
 
     }
