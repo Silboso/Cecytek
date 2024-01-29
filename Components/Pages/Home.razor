@@ -29,13 +29,15 @@ else
 }
 
 @code {
-
+    [Inject] PreloadService Preload { get; set; }
     private List<TipoPago> ListaTipoPago { get; set; }
 
 
 
     protected override async Task OnInitializedAsync()
     {
+        Preload.Show();
+        await Task.Delay(1000);
         ListaTipoPago = await Contexto.TipoPago.ToListAsync();
     }
 }

@@ -17,7 +17,7 @@ namespace Cecytek
                 });
 
             //Cadena conexion PostgreSQL
-            string CadenaPostGreSQL = "Host=localhost;Port=5432;Database=Cecytek;Username=postgres;Password=123";
+            string CadenaPostGreSQL = "Host=ep-solitary-flower-a53pkk73-pooler.us-east-2.aws.neon.tech;Port=5432;Database=Cecytek;Username=gr200110536;Password=0GVkKlc4bCFH;sslmode=require";
 
             builder.Services.AddDbContext<CecytekContext>(options =>
             {
