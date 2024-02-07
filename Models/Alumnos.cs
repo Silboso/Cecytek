@@ -41,6 +41,8 @@ namespace Cecytek.Models
         public int idcarrera { get; set; }
         [Required]
         public Turnos turno { get; set; }
+        [Required]
+        public Estado estado { get; set; }
 
     }
 
@@ -59,5 +61,15 @@ namespace Cecytek.Models
         Matutino ,
         Vespertino ,
         Tonaya  
+    }
+
+    public enum Estado
+    {
+        Inactivo,
+        Activo,
+        Graduado,
+        Recursando,
+        Revalidado,
+        Baja      
     }
 }

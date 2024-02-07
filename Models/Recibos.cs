@@ -8,13 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Cecytek.Models
 {
-    /*CREATE TABLE Recibos (
-    IDRecibo SERIAL PRIMARY KEY,
-    NoControl VARCHAR(20) REFERENCES Alumnos(NoControl),
-    IDTipoPago INTEGER REFERENCES TipoPago(IDTipoPago),
-    Cantidad DECIMAL(10, 2) NOT NULL,
-    Url VARCHAR(255) NOT NULL
-);*/
+    
     [Table("recibos")]
     public class Recibos
     {
@@ -30,5 +24,9 @@ namespace Cecytek.Models
         [Required]
         [StringLength(255)]
         public string url { get; set; }
+        [Required]
+        public DateTime fechapago { get; set; }
+        [Required]
+        public string homoclave { get; set; }
     }
 }

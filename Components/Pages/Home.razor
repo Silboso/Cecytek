@@ -1,43 +1,4 @@
 ﻿@page "/"
-@inject CecytekContext Contexto
-
-@if (ListaTipoPago?.Count > 0)
-{
-    <table class="table table-striped table-hover table-responsive">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Nombre del Pago</th>
-                <th scope="col">Monto</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var TipoPago in ListaTipoPago)
-            {
-                <tr>
-                    <th scope="row">@TipoPago.idtipopago</th>
-                    <td>@TipoPago.nombrepago</td>
-                    <td>@TipoPago.monto</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <MensajeSinRegistros />
-}
-
-@code {
-    [Inject] PreloadService Preload { get; set; }
-    private List<TipoPago> ListaTipoPago { get; set; }
 
 
-
-    protected override async Task OnInitializedAsync()
-    {
-        Preload.Show();
-        await Task.Delay(1000);
-        ListaTipoPago = await Contexto.TipoPago.ToListAsync();
-    }
-}
+Hola

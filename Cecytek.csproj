@@ -58,6 +58,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <None Include="wwwroot\assets\cecytej-logo.png" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Blazor.Bootstrap" Version="1.10.5" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
