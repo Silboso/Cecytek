@@ -1,0 +1,29 @@
+﻿<a href="/" class="btn">
+    <Card Color="CardColor.Primary" Class="mb-4" Style="width:18rem;">
+        <CardHeader>
+            <!--Muestra el tipo de pago-->
+            @NombreTipoPago
+        </CardHeader>
+        <CardBody>
+            <CardTitle>Primary card title</CardTitle>
+            <CardText>Some quick example text to build on the card title and make up the bulk of the card's content.</CardText>
+        </CardBody>
+    </Card>
+</a>
+
+
+
+@code {
+    [Parameter] public Recibos Recibo { get; set; }
+    [Parameter] public List<TipoPago> ListaTipoPagos { get; set; }
+    private string NombreTipoPago { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(async () =>
+        {
+            NombreTipoPago = ListaTipoPagos.Where(x => x.idtipopago == Recibo.idtipopago).Select(x => x.nombrepago).FirstOrDefault();
+        });
+    }
+
+}

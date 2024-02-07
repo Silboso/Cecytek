@@ -65,7 +65,8 @@
                                     @carrera.nombrecarrera
                                 }
                             }
-                            &nbsp;   @item.grado @item.grupo
+                           <br/>
+                            @item.grado @item.grupo
                         </Button>
                     }
                 </div>
@@ -81,6 +82,7 @@ else
 
 
 @code {
+    [Inject] protected PreloadService PreloadService { get; set; }
     private List<Alumnos?> ListaGrados { get; set; }
     private List<Carreras> ListaCarreras { get; set; }
     private List<Alumnos?> GruposActivos { get; set; }
@@ -88,8 +90,24 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await ObtenerCarreras();
-        await ObtenerGradosActivos();
+        PreloadService.Show();
+        try
+        {
+            await Task.Run(async () =>
+            {
+                await ObtenerCarreras();
+                await ObtenerGradosActivos();
+            });
+        }
+        catch (Exception ex)
+        {
+            //Mostrar mensaje de error en pantalla
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar las formas de cobro", "Ok");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
 
     }
 
