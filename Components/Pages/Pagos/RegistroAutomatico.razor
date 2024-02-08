@@ -50,9 +50,10 @@
                         </div>
                         <div class="row">
                             <div class="col-sm-6 mb-2">
-
+                                <Button Color="ButtonColor.Primary" Type="ButtonType.Submit" Disabled="true">Guardar</Button>
                             </div>
                         </div>
+                    </div>
                 </EditForm>
             </div>
         </div>
@@ -75,7 +76,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await Application.Current.MainPage.DisplayAlert("Error", " " + referencia.ToString(), "Ok");
+        
         PreloadService.Show();
         try
         {

@@ -125,7 +125,7 @@ else
             Recibo = await Contexto.Recibos.Where(x => x.idrecibo == idrecibo).FirstOrDefaultAsync();
             ListaCarreras = await Contexto.Carreras.ToListAsync();
             Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == Recibo.nocontrol).FirstOrDefaultAsync();
-            VolverURL = $"/Pagos/Consultar/{Alumno.nocontrol}";
+            VolverURL = $"/Alumnos/Info/{Alumno.idalumno}";
             ListaTipoPagos = await Contexto.TipoPago.ToListAsync();
             NombreTipoPago = ListaTipoPagos.Where(x => x.idtipopago == Recibo.idtipopago).Select(x => x.nombrepago).FirstOrDefault();
         });

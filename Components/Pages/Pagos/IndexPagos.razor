@@ -13,6 +13,7 @@
                 <!--Campo para ingresar la referencia-->
                 <InputText id="referencia" class="form-control" @bind-Value="referencia" />
                 <!--Boton que lleva a /Pagos/RegistroAutomatico/@referencia-->
+                <br />
                 <Button Color="ButtonColor.Primary" @onclick="() => Navegar()" Type=" ButtonType.Link">Pago Automatico</Button>
 
             </CardBody>
@@ -22,8 +23,8 @@
         <Card>
             <CardBody>
                 <CardTitle>Manual</CardTitle>
-                <CardText>With supporting text below as a natural lead-in to additional content.</CardText>
-                <Button Color="ButtonColor.Primary" To="/Pagos/RegistrarPago" Type="ButtonType.Link">Go somewhere</Button>
+                <CardText></CardText>
+                <Button Color="ButtonColor.Primary" To="/Pagos/RegistrarPago" Type="ButtonType.Link" Disabled="true">Pago Manual</Button>
             </CardBody>
         </Card>
     </div>
