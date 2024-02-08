@@ -1,5 +1,46 @@
 ﻿@page "/Pagos"
 @inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
 
+
+<TituloPagina Titulo="Pagos" />
+
+<div class="row">
+    <div class="col-sm-6">
+        <Card>
+            <CardBody>
+                <CardTitle>Automatico</CardTitle>
+                <!--Campo para ingresar la referencia-->
+                <InputText id="referencia" class="form-control" @bind-Value="referencia" />
+                <!--Boton que lleva a /Pagos/RegistroAutomatico/@referencia-->
+                <Button Color="ButtonColor.Primary" @onclick="() => Navegar()" Type=" ButtonType.Link">Pago Automatico</Button>
+
+            </CardBody>
+        </Card>
+    </div>
+    <div class="col-sm-6">
+        <Card>
+            <CardBody>
+                <CardTitle>Manual</CardTitle>
+                <CardText>With supporting text below as a natural lead-in to additional content.</CardText>
+                <Button Color="ButtonColor.Primary" To="/Pagos/RegistrarPago" Type="ButtonType.Link">Go somewhere</Button>
+            </CardBody>
+        </Card>
+    </div>
+</div>
+
+
+
+@code {
+    [Inject] protected PreloadService PreloadService { get; set; }
+    [Inject] protected ToastService ToastService { get; set; }
+    private String referencia { get; set; }
+
+    private async Task Navegar()
+    {
+        NavigationManager.NavigateTo("/Pagos/RegistroAutomatico/" + referencia);
+    }
+
+}
 
 

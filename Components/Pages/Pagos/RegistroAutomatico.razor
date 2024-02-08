@@ -1,0 +1,132 @@
+﻿@page "/Pagos/RegistroAutomatico/{referencia}"
+@inject CecytekContext Contexto
+
+<TituloPagina Titulo="Registro de Pago"></TituloPagina>
+
+@if (Recibo != null)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 d-flex justify-content-center">
+                <EditForm Model="Recibo" OnValidSubmit="Guardar">
+                    <DataAnnotationsValidator />
+                    <div class="col-sm-12">
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+                                <label for="nombrealumno">Nombre del Alumno</label>
+                                <InputText id="nombrealumno" class="form-control" @bind-Value="@Alumno.nombrealumno" disabled />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+                                <label for="nocontrol">No. Control</label>
+                                <InputText id="nocontrol" class="form-control" @bind-Value="@Recibo.nocontrol" disabled />
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <label for="fechapago">Fecha de Pago</label>
+                                <InputDate id="fechapago" class="form-control" @bind-Value="@Recibo.fechapago" disabled />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+                                <label for="cantidad">Cantidad</label>
+                                <InputNumber id="cantidad" class="form-control" @bind-Value="@Recibo.cantidad" disabled />
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <label for="idtipopago">Tipo de Pago</label>
+                                <InputSelect id="idtipopago" class="form-control" @bind-Value="@Recibo.idtipopago" disabled>
+                                    @foreach (var tipo in ListaTiposPago)
+                                    {
+                                        <option value="@tipo.idtipopago">@tipo.nombrepago</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+                                <label for="homoclave">Homoclave</label>
+                                <InputText id="homoclave" class="form-control" @bind-Value="@Recibo.homoclave" disabled />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-6 mb-2">
+
+                            </div>
+                        </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+
+}
+else
+{
+    <p>Cargando...</p>
+}
+
+
+@code {
+    [Inject] protected PreloadService PreloadService { get; set; }
+    [Inject] protected ToastService ToastService { get; set; }
+    [Parameter] public string referencia { get; set; }
+    private Alumnos Alumno { get; set; }
+    private Recibos Recibo { get; set; }
+    private List<TipoPago> ListaTiposPago { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Application.Current.MainPage.DisplayAlert("Error", " " + referencia.ToString(), "Ok");
+        PreloadService.Show();
+        try
+        {
+            await Task.Run(async () =>
+                {
+                    ListaTiposPago = await Contexto.TipoPago.ToListAsync();
+                    //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
+                    //Los siguientes 14 el no de control
+                    //El resto es la homoclave
+                    string tipoPago = referencia.Substring(2, 2);
+                    string nocontrol = referencia.Substring(4, 14);
+                    string homoclave = referencia.Substring(18);
+                    //Buscar el alumno
+                    Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
+                    TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
+                    if (Alumno != null)
+                    {
+                        Recibo = new Recibos
+                            {
+                                nocontrol = nocontrol,
+                                fechapago = DateTime.Now,
+                                cantidad = tipo.monto,
+                                idtipopago = int.Parse(tipoPago),
+                                homoclave = homoclave
+                            };
+                    }
+                });
+        }
+        catch (Exception ex)
+        {
+            //Mostrar mensaje de error en pantalla
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar las formas de cobro " + ex, "Ok");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+    }
+
+    private void Guardar()
+    {
+        try
+        {
+            Contexto.Recibos.Add(Recibo);
+            Contexto.SaveChanges();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+    }
+}

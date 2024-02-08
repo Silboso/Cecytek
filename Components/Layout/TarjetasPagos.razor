@@ -1,15 +1,18 @@
-﻿<a href="/" class="btn">
+﻿<a href="/Pagos/Consultar/@Recibo.idrecibo" class="btn">
     <Card Color="CardColor.Primary" Class="mb-4" Style="width:18rem;">
         <CardHeader>
-            <!--Muestra el tipo de pago-->
-            @NombreTipoPago
+            <span class="badge bg-success">Pagado</span>
         </CardHeader>
         <CardBody>
-            <CardTitle>Primary card title</CardTitle>
-            <CardText>Some quick example text to build on the card title and make up the bulk of the card's content.</CardText>
+            <CardTitle>@NombreTipoPago</CardTitle>
+                <CardText>
+                    <p>Fecha de Pago: @Recibo.fechapago</p>
+                <p>Monto: @Recibo.cantidad</p>
+            </CardText>
         </CardBody>
     </Card>
 </a>
+
 
 
 

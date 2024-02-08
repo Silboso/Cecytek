@@ -28,5 +28,19 @@ namespace Cecytek.Models
         public DateTime fechapago { get; set; }
         [Required]
         public string homoclave { get; set; }
+
+        [NotMapped]
+        //La referencia se compone de idtipopago, nocontrol y homoclave
+        public string referencia
+        {
+            get
+            {
+                return idtipopago.ToString() + nocontrol + homoclave;
+            }
+            set
+            {
+
+            }
+        }
     }
 }

@@ -1,0 +1,13 @@
+﻿@* Boton para actualizar imagen *@
+<a @onclick="() => OnActualizarImagen.InvokeAsync(IdRegistro)"
+   class="btn btn-outline-primary btn-lg"
+   data-bs-toggle="tooltip"
+   data-bs-placement="top"
+   title="Actualizar Imagen">
+    <i class="bi bi-image"></i>
+</a>
+
+@code {
+    [Parameter] public int IdRegistro { get; set; }
+    [Parameter] public EventCallback<int> OnActualizarImagen { get; set; }
+}

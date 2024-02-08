@@ -1,9 +1,9 @@
-﻿@page "/Alumnos/Info/{idalumno:int}"
+﻿@page "/Pagos/Consultar/{idrecibo:int}"
 @inject CecytekContext Contexto
 
-<TituloPagina Titulo="Información del Alumno"></TituloPagina>
+<TituloPagina Titulo="Consultar Pago"></TituloPagina>
 
-@if (Alumno != null)
+@if (NombreTipoPago != null)
 {
     <div class="container">
         <div class="row">
@@ -44,7 +44,6 @@
                     <div class="row">
                         <div class="col-sm-4 mb-2">
                             <label for="carrera">Carrera</label>
-                            <!--InputSelect que contiene las carreras-->
                             <InputSelect id="carrera" class="form-control" @bind-Value="@Alumno.idcarrera" disabled>
                                 @foreach (var Carrera in ListaCarreras)
                                 {
@@ -61,14 +60,28 @@
                                 }
                             </InputSelect>
                         </div>
-                        <div class="col-sm-4 mb-2">
-                            <label for="estado">Estado</label>
-                            <InputSelect id="estado" class="form-control" @bind-Value="@Alumno.estado" disabled>
-                                @foreach (Estado estado in Enum.GetValues(typeof(Estado)))
-                                {
-                                    <option value="@estado">@estado</option>
-                                }
-                            </InputSelect>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <label for="fechapago">Fecha de Pago</label>
+                            <InputDate id="fechapago" class="form-control" @bind-Value="@Recibo.fechapago" disabled />
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label for="cantidad">Monto</label>
+                            <InputNumber id="cantidad" class="form-control" @bind-Value="@Recibo.cantidad" disabled />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <label for="idtipopago">Tipo de Pago</label>
+                            <InputText id="idtipopago" class="form-control" @bind-Value="@NombreTipoPago" disabled />
+                        </div>
+                    </div>
+                    <!--Referencia de pago-->
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <label for="referencia">Referencia</label>
+                            <InputText id="referencia" class="form-control" @bind-Value="@Recibo.referencia" disabled />
                         </div>
                     </div>
                 </div>
@@ -76,61 +89,46 @@
         </div>
     </div>
 }
-
-@if (ListaRecibos?.Count > 0)
+else
 {
-    <div class="container">
-        <div class="row">
-            <div class="col-md-12 d-flex justify-content-center">
-                <div class="col-sm-12">
-                    @foreach (var Recibo in ListaRecibos)
-                    {
-                            <TarjetasPagos Recibo="@Recibo" ListaTipoPagos="@ListaTipoPagos"></TarjetasPagos>
-                    }             
+    <p>Cargando...</p>
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 d-flex justify-content-center">
+            <div class="col-sm-12">
+                <div class="row">
+                    <!--Boton que te regresa a la pagina anterior-->
+                    <BotonVolver UrlVolver="@VolverURL"></BotonVolver>
                 </div>
             </div>
         </div>
     </div>
-}
-else
-{
-    <div class="alert alert-secondary d-flex align-items-center" role="alert">
-        <div>
-            El alumno no tiene pagos registrados
-        </div>
-    </div>
-}
+</div>
 
 @code {
     [Inject] protected PreloadService PreloadService { get; set; }
-    [Inject] protected ToastService ToastService { get; set; }
-    [Parameter] public int idalumno { get; set; }
-    private Alumnos? Alumno { get; set; }
-    private List<Carreras> ListaCarreras { get; set; }
-    private List<Recibos> ListaRecibos { get; set; }
+    [Parameter] public int idrecibo { get; set; }
+    private Recibos Recibo { get; set; }
     private List<TipoPago> ListaTipoPagos { get; set; }
+    private string NombreTipoPago { get; set; }
+    private Alumnos Alumno { get; set; }
+    private string VolverURL { get; set; }
+    private List<Carreras> ListaCarreras { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         PreloadService.Show();
-        try
+        await Task.Run(async () =>
         {
-            await Task.Run(async () =>
-            {
-                ListaTipoPagos = await Contexto.TipoPago.ToListAsync();
-                ListaCarreras = await Contexto.Carreras.ToListAsync();
-                Alumno = await Contexto.Alumnos.FindAsync(idalumno);
-                ListaRecibos = await Contexto.Recibos.Where(x => x.nocontrol == Alumno.nocontrol).ToListAsync();
-            });
-        }
-        catch (Exception ex)
-        {
-            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo cargar el alumno", "Ok");
-        }
-        finally
-        {
-            PreloadService.Hide();
-        }
+            Recibo = await Contexto.Recibos.Where(x => x.idrecibo == idrecibo).FirstOrDefaultAsync();
+            ListaCarreras = await Contexto.Carreras.ToListAsync();
+            Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == Recibo.nocontrol).FirstOrDefaultAsync();
+            VolverURL = $"/Pagos/Consultar/{Alumno.nocontrol}";
+            ListaTipoPagos = await Contexto.TipoPago.ToListAsync();
+            NombreTipoPago = ListaTipoPagos.Where(x => x.idtipopago == Recibo.idtipopago).Select(x => x.nombrepago).FirstOrDefault();
+        });
+        PreloadService.Hide();
     }
 }
-
