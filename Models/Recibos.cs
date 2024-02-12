@@ -27,20 +27,16 @@ namespace Cecytek.Models
         [Required]
         public DateTime fechapago { get; set; }
         [Required]
-        public string homoclave { get; set; }
+        public string referencia { get; set; }
 
-        [NotMapped]
-        //La referencia se compone de idtipopago, nocontrol y homoclave
-        public string referencia
-        {
-            get
-            {
-                return idtipopago.ToString() + nocontrol + homoclave;
-            }
-            set
-            {
+        public EstadoRecibos? estado { get; set; } = EstadoRecibos.Pendiente;
 
-            }
-        }
+        public string? descripcion { get; set; }
+    }
+
+    public enum EstadoRecibos
+    {
+        Pendiente,
+        Pagado
     }
 }

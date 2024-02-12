@@ -45,7 +45,7 @@
                         <div class="row">
                             <div class="col-sm-6 mb-2">
                                 <label for="homoclave">Homoclave</label>
-                                <InputText id="homoclave" class="form-control" @bind-Value="@Recibo.homoclave" disabled />
+                                <InputText id="homoclave" class="form-control" @bind-Value="@Recibo.referencia" disabled />
                             </div>
                         </div>
                         <div class="row">
@@ -80,7 +80,7 @@ else
         PreloadService.Show();
         try
         {
-            await Task.Run(async () =>
+            await Task.Run((Func<Task>)(async () =>
                 {
                     ListaTiposPago = await Contexto.TipoPago.ToListAsync();
                     //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
@@ -95,15 +95,15 @@ else
                     if (Alumno != null)
                     {
                         Recibo = new Recibos
-                            {
+                        {
                                 nocontrol = nocontrol,
                                 fechapago = DateTime.Now,
                                 cantidad = tipo.monto,
                                 idtipopago = int.Parse(tipoPago),
-                                homoclave = homoclave
+                                referencia = homoclave
                             };
                     }
-                });
+                }));
         }
         catch (Exception ex)
         {
