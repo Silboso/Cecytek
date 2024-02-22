@@ -3,7 +3,7 @@
 @inject NavigationManager NavigationManager
 
 
-<TituloPagina Titulo="Pagos" />
+<TituloPaginaIndex Titulo="Pagos" Url="/pagos/tipospagos"></TituloPaginaIndex>
 
 <div class="row">
     <div class="col-sm-6">
@@ -24,7 +24,24 @@
             <CardBody>
                 <CardTitle>Manual</CardTitle>
                 <CardText></CardText>
-                <Button Color="ButtonColor.Primary" To="/Pagos/RegistrarPago" Type="ButtonType.Link" Disabled="true">Pago Manual</Button>
+                <Button Color="ButtonColor.Primary" To="/Pagos/RegistrarPago" Type="ButtonType.Link">Pago Manual</Button>
+            </CardBody>
+        </Card>
+    </div>
+</div>
+<!--Salto de renglon-->
+<br />
+<div class="row">
+    <div class="col-sm-6">
+        <Card>
+            <CardBody>
+                <CardTitle>Buscar referencia</CardTitle>
+                <!--Campo para ingresar la referencia-->
+                <InputText id="referencia" class="form-control" @bind-Value="referenciabusquedad" />
+                <!--Boton que lleva a /Pagos/RegistroAutomatico/@referencia-->
+                <br />
+                <Button Color="ButtonColor.Primary" @onclick="() => Buscar()" Type=" ButtonType.Link">Buscar Referencia</Button>
+
             </CardBody>
         </Card>
     </div>
@@ -32,14 +49,48 @@
 
 
 
+
 @code {
     [Inject] protected PreloadService PreloadService { get; set; }
     [Inject] protected ToastService ToastService { get; set; }
     private String referencia { get; set; }
+    private String referenciabusquedad { get; set; }
 
     private async Task Navegar()
     {
-        NavigationManager.NavigateTo("/Pagos/RegistroAutomatico/" + referencia);
+        //Busca si la referencia existe previamente
+        var existe = await Contexto.Recibos.AnyAsync(x => x.referencia == referencia);
+        //Si no existe, manda a la pagina de registro automatico
+        if (!existe)
+        {
+            NavigationManager.NavigateTo("/Pagos/RegistroAutomatico/" + referencia);
+        }
+        //Si existe, manda un mensaje de error
+        else
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "La referencia ya existe", "Aceptar");
+        }        
+    }
+
+    private async Task Buscar()
+    {
+        PreloadService.Show();
+        //Busca si la referencia existe previamente
+        var existe = await Contexto.Recibos.AnyAsync(x => x.referencia == referenciabusquedad);
+        //Si no existe, manda a la pagina de consulta de pago
+        if (existe)
+        {
+            Recibos recibo = await Contexto.Recibos.Where(x => x.referencia == referenciabusquedad).FirstOrDefaultAsync();
+            NavigationManager.NavigateTo("/Pagos/Consultar/" + recibo.idrecibo);
+            PreloadService.Hide();
+        }
+        //Si existe, manda un mensaje de error
+        else
+        {
+            PreloadService.Hide();
+           await Application.Current.MainPage.DisplayAlert("Error", "La referencia no existe", "Aceptar");
+        }    
+        PreloadService.Hide();
     }
 
 }

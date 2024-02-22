@@ -103,6 +103,10 @@ else
                                 referencia = homoclave
                             };
                     }
+                    else 
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece la referencia", "Ok");
+                    }
                 }));
         }
         catch (Exception ex)

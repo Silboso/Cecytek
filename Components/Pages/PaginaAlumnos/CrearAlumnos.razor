@@ -1,0 +1,159 @@
+﻿@page "/Alumnos/Create"
+@inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+
+
+<TituloPagina Titulo="Crear Alumno"></TituloPagina>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 d-flex justify-content-center">
+            <div class="col-sm-12">
+                <EditForm Model="@Alumno" OnValidSubmit="@GuardarCambios">
+                    <DataAnnotationsValidator />
+                   
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <label for="nombrealumno">Nombre del Alumno</label>
+                            <InputText id="nombrealumno" class="form-control" @bind-Value="@Alumno.nombrealumno" />
+                            <ValidationMessage For="@(() => Alumno.nombrealumno)" />
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label for="nocontrol">No. Control</label>
+                            <InputText id="nocontrol" class="form-control" @bind-Value="@Alumno.nocontrol" />
+                            <ValidationMessage For="@(() => Alumno.nocontrol)" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <!--InputSelect que contiene 6 semestres-->
+                            <label for="semestre">Semestre</label>
+                            <InputSelect id="semestre" class="form-control" @bind-Value="@Alumno.grado">
+                                @foreach (Grados grado in Enum.GetValues(typeof(Grados)))
+                                {
+                                    <option value="@grado">@grado</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Alumno.grado)" />
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <label for="grupo">Grupo</label>
+                            <InputSelect id="grupo" class="form-control" @bind-Value="@Alumno.grupo">
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Alumno.grupo)" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-4 mb-2">
+                            <label for="carrera">Carrera</label>
+                            <!--InputSelect que contiene las carreras-->
+                            <InputSelect id="carrera" class="form-control" @bind-Value="@Alumno.idcarrera">
+                                <option value="0">Selecciona una carrera</option>
+                                @foreach (var Carrera in ListaCarreras)
+                                {
+                                    <option value="@Carrera.idcarrera">@Carrera.nombrecarrera</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Alumno.idcarrera)" />
+                        </div>
+                        <div class="col-sm-4 mb-2">
+                            <label for="turno">Turno</label>
+                            <InputSelect id="turno" class="form-control" @bind-Value="@Alumno.turno">
+                                @foreach (Turnos turno in Enum.GetValues(typeof(Turnos)))
+                                {
+                                    <option value="@turno">@turno</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Alumno.turno)" />
+                        </div>
+                        <div class="col-sm-4 mb-2">
+                            <label for="estado">Estado</label>
+                            <InputSelect id="estado" class="form-control" @bind-Value="@Alumno.estado">
+                                @foreach (Estado estado in Enum.GetValues(typeof(Estado)))
+                                {
+                                    <option value="@estado">@estado</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => Alumno.estado)" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-primary">Guardar</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Inject] protected PreloadService PreloadService { get; set; }
+    [Inject] protected ToastService ToastService { get; set; }
+    private Alumnos Alumno = new Alumnos();
+    private List<Carreras> ListaCarreras = new List<Carreras>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService.Show();
+        try
+        {
+            await Task.Run(async () =>
+                {
+                    ListaCarreras = await Contexto.Carreras.ToListAsync();
+                });
+            PreloadService.Hide();
+        }
+        catch (Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo cargar la lista de alumnos", "Ok");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        PreloadService.Show();
+        try
+        {
+            //Revisa en la base de datos si el alumno ya existe
+            var existe = await Contexto.Alumnos.AnyAsync(x => x.nocontrol == Alumno.nocontrol);
+            if (existe)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "El alumno ya existe", "Ok");
+                return;
+            }
+            //Si no existe, lo agrega a la base de datos
+            else
+            {
+                await Contexto.Alumnos.AddAsync(Alumno);
+                await Contexto.SaveChangesAsync();
+                ToastService.Notify(new(ToastType.Success, $"Alumno guardado con exito"));
+                //Recargar la pagina
+                StateHasChanged();
+                Alumno = new Alumnos();
+                NavigationManager.NavigateTo("/Alumnos/Create");
+            }
+
+        }
+        catch (Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo guardar el alumno" + ex, "Ok");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+    }
+}
+
+

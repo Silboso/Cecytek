@@ -42,7 +42,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-4 mb-2">
+                        <div class="col-sm-6 mb-2">
                             <label for="carrera">Carrera</label>
                             <InputSelect id="carrera" class="form-control" @bind-Value="@Alumno.idcarrera" disabled>
                                 @foreach (var Carrera in ListaCarreras)
@@ -51,7 +51,7 @@
                                 }
                             </InputSelect>
                         </div>
-                        <div class="col-sm-4 mb-2">
+                        <div class="col-sm-6 mb-2">
                             <label for="turno">Turno</label>
                             <InputSelect id="turno" class="form-control" @bind-Value="@Alumno.turno" disabled>
                                 @foreach (Turnos turno in Enum.GetValues(typeof(Turnos)))
@@ -76,14 +76,12 @@
                             <label for="idtipopago">Tipo de Pago</label>
                             <InputText id="idtipopago" class="form-control" @bind-Value="@NombreTipoPago" disabled />
                         </div>
-                    </div>
-                    <!--Referencia de pago-->
-                    <div class="row">
                         <div class="col-sm-6 mb-2">
                             <label for="referencia">Referencia</label>
                             <InputText id="referencia" class="form-control" @bind-Value="@Recibo.referencia" disabled />
                         </div>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -97,7 +95,7 @@ else
 <div class="container">
     <div class="row">
         <div class="col-md-12 d-flex justify-content-center">
-            <div class="col-sm-12">
+            <div class="col-sm-2">
                 <div class="row">
                     <!--Boton que te regresa a la pagina anterior-->
                     <BotonVolver UrlVolver="@VolverURL"></BotonVolver>

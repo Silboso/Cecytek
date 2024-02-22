@@ -5,6 +5,7 @@
 
 @if (ListaGrados?.Count > 0)
 {
+    <TituloPaginaIndex Titulo="Alumnos" Url="/Alumnos/Create" />
     <div class="d-flex flex-wrap" style="max-width: 90vw">
         @foreach (var Carrera in ListaCarreras)
         {
@@ -132,9 +133,11 @@ else
 
     private async Task ObtenerGruposActivos(Grados grado, int carrera)
     {
+        PreloadService.Show();
+        try{
         //Trae un alumno de cada grupo de la carrera y grado seleccionado
         GruposActivos = await Contexto.Alumnos
-                    .Where(x => x.grado == grado && x.idcarrera == carrera)
+                    .Where(x => x.grado == grado && x.idcarrera == carrera && x.estado != Estado.Inactivo && x.estado != Estado.Baja && x.estado != Estado.Graduado)
                     .GroupBy(x => x.grupo)
                     .Select(x => x.FirstOrDefault())
                     .ToListAsync();
@@ -146,6 +149,16 @@ else
         // }
         // await Application.Current.MainPage.DisplayAlert("Grupos Activos", mensaje, "Ok");
         Acordeon = +1;
+        }
+        catch (Exception ex)
+        {
+            //Mostrar mensaje de error en pantalla
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar los grupos activos", "Ok");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
     }
 
     private void ReducirContador()

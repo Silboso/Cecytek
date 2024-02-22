@@ -1,0 +1,81 @@
+﻿@page "/Pagos/RegistrarPago"
+@inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+
+<TituloPagina Titulo="Registrar Pago"></TituloPagina>
+
+<div class="row">
+    <div class="col-md-12 d-flex justify-content-center">
+        <EditForm Model="Recibo" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator />
+            <div class="col-sm-12">
+                <div class="row">
+                    <div class="col-sm-6 mb-2">
+                        <label for="nombrealumno">Nombre del Alumno</label>
+                        <InputText id="nombrealumno" class="form-control" @bind-Value="@Alumno.nombrealumno" disabled />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 mb-2">
+                        <label for="nocontrol">No. Control</label>
+                        <InputText id="nocontrol" class="form-control" @bind-Value="@Recibo.nocontrol" disabled />
+                    </div>
+                    <div class="col-sm-6 mb-2">
+                        <label for="fechapago">Fecha de Pago</label>
+                        <InputDate id="fechapago" class="form-control" @bind-Value="@Recibo.fechapago" disabled />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 mb-2">
+                        <label for="cantidad">Cantidad</label>
+                        <InputNumber id="cantidad" class="form-control" @bind-Value="@Recibo.cantidad" disabled />
+                    </div>
+                    <div class="col-sm-6 mb-2">
+                        <label for="idtipopago">Tipo de Pago</label>
+                        <InputSelect id="idtipopago" class="form-control" @bind-Value="@Recibo.idtipopago" disabled>
+                            @foreach (var tipo in ListaTiposPago)
+                            {
+                                <option value="@tipo.idtipopago">@tipo.nombrepago</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 mb-2">
+                        <label for="homoclave">Homoclave</label>
+                        <InputText id="homoclave" class="form-control" @bind-Value="@Recibo.referencia" disabled />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-6 mb-2">
+                        <Button Color="ButtonColor.Primary" Type="ButtonType.Submit" Disabled="true">Guardar</Button>
+                    </div>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+
+@code {
+    [Inject] PreloadService PreloadService { get; set; }
+    [Inject] ToastService ToastService { get; set; }
+    private Recibos Recibo = new Recibos();
+    private Alumnos Alumno = new Alumnos();
+    private List<TipoPago> ListaTiposPago = new List<TipoPago>();
+
+    private void Guardar()
+    {
+        try
+        {
+            Contexto.Recibos.Add(Recibo);
+            Contexto.SaveChanges();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+
+    }
+}
