@@ -1,0 +1,33 @@
+﻿@page "/Reportes"
+@inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+
+
+<TituloPagina Titulo="Reportes" />
+
+<div class="row">
+    <div class="col-sm-6">
+        <Card>
+            <CardBody>
+                <CardTitle>Reporte por grupo</CardTitle>
+                <button class="btn btn-primary" @onclick="NavegarAIndexGrupos">Reporte por grupos</button>
+
+            </CardBody>
+        </Card>
+    </div>
+    <div class="col-sm-6">
+        <Card>
+            <CardBody>
+                <CardTitle>Reporte general</CardTitle>
+                <Button Class="btn-primary"> Generear reporte </Button>
+            </CardBody>
+        </Card>
+    </div>
+</div>
+
+@code {
+    private void NavegarAIndexGrupos()
+    {
+        NavigationManager.NavigateTo("/IndexGrupos");
+    }
+}
