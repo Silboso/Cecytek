@@ -88,7 +88,7 @@ else
                     //El resto es la homoclave
                     string tipoPago = referencia.Substring(2, 2);
                     string nocontrol = referencia.Substring(4, 14);
-                    string homoclave = referencia.Substring(18);
+                    string homoclave = referencia;
                     //Buscar el alumno
                     Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
                     TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
