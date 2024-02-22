@@ -33,11 +33,11 @@ namespace Cecytek.Models
         [StringLength(100)]
         public string nombrealumno { get; set; }
         [Required]
-        public Grados grado { get; set; }
+        public Grados grado { get; set; } = Grados.Primero;
         [Required]
-        [StringLength(1)]
-        public string grupo { get; set; }
+        public string grupo { get; set; } = "A";
         [Required]
+        [Range(1, int.MaxValue, ErrorMessage = "Seleccione una carrera")]
         public int idcarrera { get; set; }
         [Required]
         public Turnos turno { get; set; }

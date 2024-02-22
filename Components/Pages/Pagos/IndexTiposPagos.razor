@@ -1,6 +1,9 @@
 ﻿@page "/pagos/tipospagos"
 @inject CecytekContext Contexto
 
+
+<TituloPagina Titulo="Tipos de Pagos"></TituloPagina>
+
 @if (ListaTipoPago?.Count > 0)
 {
     <table class="table table-striped table-hover table-responsive">
@@ -9,6 +12,7 @@
                 <th scope="col">#</th>
                 <th scope="col">Nombre del Pago</th>
                 <th scope="col">Monto</th>
+                <th scope="col">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -18,6 +22,18 @@
                     <th scope="row">@TipoPago.idtipopago</th>
                     <td>@TipoPago.nombrepago</td>
                     <td>@TipoPago.monto</td>
+                    <!--Envia a la pagina "/pagos/tipospagos/editar" mas el tipo de pago-->
+                    @* <td><a href="/pagos/tipospagos/editar/@TipoPago.idtipopago" class="bi bi-pen" disabled></a></td> *@
+                    <td>
+                        <button @onclick=sinFuncion
+                                class="btn btn-outline-primary"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        
+                    </td>
                 </tr>
             }
         </tbody>
@@ -29,6 +45,7 @@ else
 }
 
 @code {
+    [Inject] ToastService ToastService { get; set; }
     [Inject] PreloadService Preload { get; set; }
     private List<TipoPago> ListaTipoPago { get; set; }
 
@@ -52,5 +69,10 @@ else
         {
             Preload.Hide();
         }
+    }
+
+    private void sinFuncion()
+    {
+        ToastService.Notify(new(ToastType.Info, $"Funcion no disponible"));
     }
 }

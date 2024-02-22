@@ -1,7 +1,14 @@
 ﻿<a href="/Pagos/Consultar/@Recibo.idrecibo" class="btn">
     <Card Color="CardColor.Primary" Class="mb-4" Style="width:18rem;">
         <CardHeader>
-            <span class="badge bg-success">Pagado</span>
+            @if(Recibo.estado == EstadoRecibos.Pendiente)
+            {
+                <span class="badge bg-danger">Pendiente</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Pagado</span>
+            }
         </CardHeader>
         <CardBody>
             <CardTitle>@NombreTipoPago</CardTitle>

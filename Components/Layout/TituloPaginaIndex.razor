@@ -1,0 +1,31 @@
+﻿@inject NavigationManager NavigationManager
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">@Titulo</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button @onclick="@(()=> NavigationManager.NavigateTo(Url))"
+                    class="btn btn-outline-primary botondelgado"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Registro Nuevo">
+                <i class="bi bi-database-add"></i>
+            </button>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Titulo { get; set; }
+    [Parameter] public string Url { get; set; }
+    [Parameter] public string Identificador { get; set; }
+    [Inject] ToastService ToastService { get; set; }
+
+    private void sinFuncion()
+    {
+        ToastService.Notify(new(ToastType.Info, $"Funcion aun no disponible"));
+    }
+
+
+}

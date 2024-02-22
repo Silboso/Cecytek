@@ -11,15 +11,16 @@
                 <div class="col-sm-12">
                     <EditForm Model="@Alumno" OnValidSubmit="@GuardarCambios">
                         <DataAnnotationsValidator />
-                        <ValidationSummary />
                         <div class="row">
                             <div class="col-sm-6 mb-2">
                                 <label for="nombrealumno">Nombre del Alumno</label>
                                 <InputText id="nombrealumno" class="form-control" @bind-Value="@Alumno.nombrealumno" />
+                                <ValidationMessage For="@(() => Alumno.nombrealumno)" />
                             </div>
                             <div class="col-sm-6 mb-2">
                                 <label for="nocontrol">No. Control</label>
                                 <InputText id="nocontrol" class="form-control" @bind-Value="@Alumno.nocontrol" />
+                                <ValidationMessage For="@(() => Alumno.nocontrol)" />
                             </div>
                         </div>
                         <div class="row">
@@ -32,6 +33,7 @@
                                         <option value="@grado">@grado</option>
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Alumno.grado)" />
                             </div>
                             <div class="col-sm-6 mb-2">
                                 <label for="grupo">Grupo</label>
@@ -43,6 +45,7 @@
                                     <option value="E">E</option>
                                     <option value="F">F</option>
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Alumno.grupo)" />
                             </div>
                         </div>
                         <div class="row">
@@ -50,11 +53,13 @@
                                 <label for="carrera">Carrera</label>
                                 <!--InputSelect que contiene las carreras-->
                                 <InputSelect id="carrera" class="form-control" @bind-Value="@Alumno.idcarrera">
+                                    <option value="0">Selecciona una carrera</option>
                                     @foreach (var Carrera in ListaCarreras)
                                     {
                                         <option value="@Carrera.idcarrera">@Carrera.nombrecarrera</option>
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Alumno.idcarrera)" />
                             </div>
                             <div class="col-sm-4 mb-2">
                                 <label for="turno">Turno</label>
@@ -64,6 +69,7 @@
                                         <option value="@turno">@turno</option>
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Alumno.turno)" />
                             </div>
                             <div class="col-sm-4 mb-2">
                                 <label for="estado">Estado</label>
@@ -73,6 +79,7 @@
                                         <option value="@estado">@estado</option>
                                     }
                                 </InputSelect>
+                                <ValidationMessage For="@(() => Alumno.estado)" />
                             </div>
                         </div>
                         <div class="d-flex justify-content-center">
