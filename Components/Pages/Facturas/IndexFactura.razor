@@ -1,0 +1,222 @@
+﻿@page "/CotejamientoPagos"
+@inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+@using NPOI.HSSF.UserModel @* // Para archivos .xls *@
+@using NPOI.SS.UserModel
+@using NPOI.XSSF.UserModel @* // Para archivos .xlsx *@
+@using System.IO
+@using System.Text
+@using Microsoft.JSInterop;
+
+<TituloPagina Titulo="Facturas" />
+
+
+@* Solo admitir archivos de Excel (.xls, .xlsx): *@
+<InputFile OnChange="@HandleFileChange"  accept=".xls,.xlsx" />
+
+@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert alert-info">@Message</div>
+}
+
+@if (IsProcessing)
+{
+    <div class="progress">
+        <div class="progress-bar" role="progressbar" style="width: @ProgressPercentage%" aria-valuenow="@ProgressPercentage" aria-valuemin="0" aria-valuemax="100">@ProgressPercentage% completado</div>
+    </div>
+}
+
+@code {
+    private string Message { get; set; }
+    private Recibos? Recibo { get; set; }
+    private bool IsProcessing { get; set; }
+    private int ProgressPercentage { get; set; }
+    private List<TipoPago> ListaTiposPago { get; set; }
+    private Alumnos Alumno { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        IsProcessing = true;
+        ProgressPercentage = 0;
+
+        var archivo = e.File;
+        if (archivo != null)
+        {
+            var extension = Path.GetExtension(archivo.Name).ToLower();
+            await InvokeAsync(() => Message = $"Extension: {extension}");
+            if (extension == ".xlsx" || extension == ".xls")
+            {
+                var memoryStream = new MemoryStream();
+                await archivo.OpenReadStream().CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                IWorkbook workbook = null;
+                if (extension == ".xlsx")
+                    workbook = new XSSFWorkbook(memoryStream);
+                else if (extension == ".xls")
+                    workbook = new HSSFWorkbook(memoryStream);
+
+                if (workbook != null)
+                {
+                    await InvokeAsync(() => Message = "Workbook cargado correctamente.");
+                    // Convertir a CSV
+                    var csvData = ConvertWorkbookToCsv(workbook);
+
+                    // Buscar homoclaves en la base de datos y actualizar estado
+                    await SearchAndUpdateReciboEstado(csvData);
+
+                    await InvokeAsync(() => Message = "Archivo subido y procesado correctamente.");
+                }
+            }
+            else
+            {
+                await InvokeAsync(() => Message = "Error: El archivo seleccionado no es un archivo de Excel válido.");
+            }
+        }
+        else
+        {
+            await InvokeAsync(() => Message = "Error: Debes seleccionar un archivo.");
+        }
+
+        IsProcessing = false;
+    }
+
+    private string ConvertWorkbookToCsv(IWorkbook workbook)
+    {
+        var csvData = new StringBuilder();
+
+        // Iterar a través de cada hoja en el libro de trabajo
+        for (int i = 0; i < workbook.NumberOfSheets; i++)
+        {
+            var sheet = workbook.GetSheetAt(i);
+
+            // Iterar a través de cada fila en la hoja
+            for (int j = 0; j <= sheet.LastRowNum; j++)
+            {
+                var row = sheet.GetRow(j);
+
+                // Si la fila no es nula, procesar las celdas
+                if (row != null)
+                {
+                    // Iterar a través de cada celda en la fila
+                    for (int k = 0; k < row.LastCellNum; k++)
+                    {
+                        var cell = row.GetCell(k);
+
+                        // Agregar el valor de la celda al archivo CSV
+                        if (cell != null)
+                        {
+                            csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
+                        }
+
+                        // Agregar una coma para separar las celdas
+                        csvData.Append(",");
+                    }
+
+                    // Agregar una nueva línea para separar las filas
+                    csvData.AppendLine();
+                }
+            }
+
+            // Actualizar el progreso
+            ProgressPercentage = (int)(((i + 1) * 100.0) / workbook.NumberOfSheets);
+        }
+
+        return csvData.ToString();
+    }
+
+    private async Task SearchAndUpdateReciboEstado(string csvData)
+    {
+        // Dividir los datos CSV en líneas
+        var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        // A toda la lista de referencias se le quita el espacio en blanco y la coma
+        for (int i = 0; i < lines.Length; i++)
+        {
+            lines[i] = lines[i].Trim().Replace(",", "");
+        }
+        //Imprime las referencias en un mensaje
+        string mensaje = "";
+        foreach (var line in lines)
+        {
+            mensaje += line + "\n";
+        }
+        //Busca en base de datos, por cada linea, la referencia
+        foreach (var line in lines)
+        {
+            Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
+            if (reciboTemp != null)
+            {
+                reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
+                await Contexto.SaveChangesAsync(); // Guardar los cambios en la base de datos
+            }
+            else
+            {
+                //Envia alerta de que no se encontro la referencia
+                // await Application.Current.MainPage.DisplayAlert("Aviso", "No se encontraron las referencias: " + lines.ToString, "OK");
+
+    //             try
+    //             {
+    //                 await Task.Run((Func<Task>)(async () =>
+    //                     {
+    //                         Recibos recibo = new Recibos();
+    //                         var r = recibo.referencia = line;
+    //                         recibo.estado = EstadoRecibos.Pagado;// o EstadoRecibos.Pendiente?
+    //                         await Contexto.Recibos.AddAsync(recibo);
+    //                         await Contexto.SaveChangesAsync();
+
+    //                         // si la referencia es mayor o menos a 20 caracteres, no se procesa
+    //                         if (r.Length != 23)
+    //                         {
+    //                             await Application.Current.MainPage.DisplayAlert("Aviso", "La referencia "+r+" no es válida", "OK");
+    //                             return;
+    //                         }
+    //                         else
+    //                         {
+                            
+                           
+
+    //                 ListaTiposPago = await Contexto.TipoPago.ToListAsync();
+    //                 //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
+    //                 //Los siguientes 14 el no de control
+    //                 //El resto es la homoclave
+    //                         string tipoPago = r.Substring(2, 2);
+    //                         string nocontrol = r.Substring(4, 14);
+    //                         string homoclave = r.Substring(18);
+    //                 //Buscar el alumno
+    //                 Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
+    //                 TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
+    //                 if (Alumno != null)
+    //                 {
+    //                     Recibo = new Recibos
+    //                         {
+    //                             nocontrol = nocontrol,
+    //                             fechapago = DateTime.Now,
+    //                             cantidad = tipo.monto,
+    //                             idtipopago = int.Parse(tipoPago),
+    //                             referencia = homoclave
+    //                         };
+    //                 }
+    //                         }
+    //                     }));
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         //mostrar en pantalla el error y las referencias que no se pudieron registrar
+    //                 await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar algunas referencias " + ex, "Ok");
+
+    //                 // //Mostrar mensaje de error en pantalla
+    //                 // await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar las formas de cobro " + ex, "Ok");
+    //     }
+
+    }
+
+            }
+        }
+        
+
+    }
+    
