@@ -1,5 +1,6 @@
 ﻿@page "/Pagos/RegistroAutomatico/{referencia}"
 @inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
 
 <TituloPagina Titulo="Registro de Pago"></TituloPagina>
 
@@ -8,7 +9,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12 d-flex justify-content-center">
-                <EditForm Model="Recibo" OnValidSubmit="Guardar">
+                <EditForm Model="Recibo" OnValidSubmit="Guardar" OnInvalidSubmit="Errorsin">
                     <DataAnnotationsValidator />
                     <div class="col-sm-12">
                         <div class="row">
@@ -50,7 +51,7 @@
                         </div>
                         <div class="row">
                             <div class="col-sm-6 mb-2">
-                                <Button Color="ButtonColor.Primary" Type="ButtonType.Submit" Disabled="true">Guardar</Button>
+                                <Button Color="ButtonColor.Primary" Type="ButtonType.Submit">Guardar</Button>
                             </div>
                         </div>
                     </div>
@@ -76,38 +77,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
+
         PreloadService.Show();
         try
         {
-            await Task.Run((Func<Task>)(async () =>
-                {
-                    ListaTiposPago = await Contexto.TipoPago.ToListAsync();
-                    //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
-                    //Los siguientes 14 el no de control
-                    //El resto es la homoclave
-                    string tipoPago = referencia.Substring(2, 2);
-                    string nocontrol = referencia.Substring(4, 14);
-                    string homoclave = referencia;
-                    //Buscar el alumno
-                    Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
-                    TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
-                    if (Alumno != null)
+            ListaTiposPago = await Contexto.TipoPago.ToListAsync();
+            //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
+            //Los siguientes 14 el no de control
+            //El resto es la homoclave
+            string tipoPago = referencia.Substring(2, 2);
+            string nocontrol = referencia.Substring(4, 14);
+            string homoclave = referencia;
+            //Buscar el alumno
+            Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
+            TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
+            if (Alumno != null)
+            {
+                Recibo = new Recibos
                     {
-                        Recibo = new Recibos
-                        {
-                                nocontrol = nocontrol,
-                                fechapago = DateTime.Now,
-                                cantidad = tipo.monto,
-                                idtipopago = int.Parse(tipoPago),
-                                referencia = homoclave
-                            };
-                    }
-                    else 
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece la referencia", "Ok");
-                    }
-                }));
+                        nocontrol = nocontrol,
+                        fechapago = DateTime.Now,
+                        cantidad = tipo.monto,
+                        idtipopago = int.Parse(tipoPago),
+                        referencia = homoclave,
+                        descripcion = "Pagado en:" + Alumno.grado + " " + Alumno.grupo + " " + Alumno.idcarrera
+                    };
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece la referencia", "Ok");
+            }
         }
         catch (Exception ex)
         {
@@ -120,18 +119,35 @@ else
         }
     }
 
-    private void Guardar()
+    private async Task Guardar()
     {
         try
         {
             Contexto.Recibos.Add(Recibo);
             Contexto.SaveChanges();
-
+            ToastService.Notify(new(ToastType.Success, $"Recibo guardado con exito"));
+            StateHasChanged();
+            NavigationManager.NavigateTo("/Pagos");
         }
         catch (Exception ex)
         {
-
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo guardar el recibo" + ex, "Ok");
         }
+    }
 
+    private async Task Errorsin(EditContext context)
+    {
+        try
+        {
+            Contexto.Recibos.Add(Recibo);
+            Contexto.SaveChanges();
+            ToastService.Notify(new(ToastType.Success, $"Recibo guardado con exito"));
+            StateHasChanged();
+            NavigationManager.NavigateTo("/Pagos");
+        }
+        catch (Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo guardar el recibo" + ex, "Ok");
+        }
     }
 }

@@ -5,7 +5,7 @@
 <TituloPagina Titulo="@Titulo"></TituloPagina>
 
 <!--Buscar el alumno por nombre o por numero de control-->
-<InputText @bind-Value="Busqueda" @oninput="BuscarAlumno" placeholder="Buscar alumno" class="m-2" />
+<InputText @bind-Value="Busqueda" @onkeypress="BuscarAlumno" @oninput="ActualizarBusqueda"  placeholder="Buscar alumno" class="m-2" />
 
 
 @if (ListaAlumnos?.Count > 0)
@@ -81,18 +81,17 @@ else
         PreloadService.Show();
         try
         {
-            await Task.Run(async () =>
-            {
-                //Busca el nombre de la carrera
-                SCarrera = Contexto.Carreras.Where(x => x.idcarrera == Carrera).Select(x => x.nombrecarrera).FirstOrDefault();
-                //Construye el titulo "1° A Formacion Basica"
-                Titulo = SCarrera + " " + Grado + "° " + Grupo;
-                //Trae la lista de alumnos que pertenecen al grupo seleccionado organizados alfabeticamente
-                ListaAlumnos = ListaAlumnos = await Contexto.Alumnos
-                        .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
-                        .OrderBy(x => x.nombrealumno)
-                        .ToListAsync();
-            });
+
+            //Busca el nombre de la carrera
+            SCarrera = Contexto.Carreras.Where(x => x.idcarrera == Carrera).Select(x => x.nombrecarrera).FirstOrDefault();
+            //Construye el titulo "1° A Formacion Basica"
+            Titulo = SCarrera + " " + Grado + "° " + Grupo;
+            //Trae la lista de alumnos que pertenecen al grupo seleccionado organizados alfabeticamente
+            ListaAlumnos = ListaAlumnos = await Contexto.Alumnos
+                    .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
+                    .OrderBy(x => x.nombrealumno)
+                    .ToListAsync();
+
         }
         catch (Exception ex)
         {
@@ -103,28 +102,58 @@ else
             PreloadService.Hide();
         }
     }
-    private async Task BuscarAlumno(ChangeEventArgs e)
+    private async Task BuscarAlumno(KeyboardEventArgs evt)
     {
-        //Convierte en mayusculas el texto ingresado en el campo de busqueda
-        e.Value = e.Value.ToString().ToUpper();
-        //Si el campo de busqueda esta vacio, regresa la lista de alumnos completa
-        if (string.IsNullOrEmpty(e.Value.ToString()))
+        //Si la tecla presionada es enter, busca el alumno
+        if (evt.Key == "Enter")
         {
-            ListaAlumnos = await Contexto.Alumnos
-                .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
-                .OrderBy(x => x.nombrealumno)
-                .ToListAsync();
+            try
+            {
+                //Convierte en mayusculas el texto ingresado en el campo de busqueda
+                Busqueda.ToUpper();
+                //Si el campo de busqueda esta vacio, regresa la lista de alumnos completa
+                if (string.IsNullOrEmpty(Busqueda.ToUpper()))
+                {
+                    ListaAlumnos = await Contexto.Alumnos
+                        .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
+                        .OrderBy(x => x.nombrealumno)
+                        .ToListAsync();
+                }
+                else
+                {
+                    //Si el campo de busqueda no esta vacio, busca el alumno por nombre o por numero de control
+                    ListaAlumnos = await Contexto.Alumnos
+                                        .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo && (x.nombrealumno.Contains(Busqueda.ToUpper()) || x.nocontrol.Contains(Busqueda.ToUpper())))
+                        .OrderBy(x => x.nombrealumno)
+                        .ToListAsync();
+                    currentPageNumber = 1;
+                }
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "" + ex, "Ok");
+            }
         }
-        else
-        {
-            //Si el campo de busqueda no esta vacio, busca el alumno por nombre o por numero de control
-            ListaAlumnos = await Contexto.Alumnos
-                .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo && (x.nombrealumno.Contains(e.Value.ToString()) || x.nocontrol.Contains(e.Value.ToString())))
-                .OrderBy(x => x.nombrealumno)
-                .ToListAsync();
-            currentPageNumber = 1;
-        }
+    }
 
+    private async Task ActualizarBusqueda(ChangeEventArgs e)
+    {
+        Busqueda = e.Value.ToString();
+        await BuscarAlumno(new KeyboardEventArgs());
+
+        if(string.IsNullOrEmpty(Busqueda))
+        {
+            await Reiniciar();
+        }
+    }
+
+    private async Task Reiniciar()
+    {
+        ListaAlumnos = await Contexto.Alumnos
+                        .Where(x => ((int)x.grado) == Grado && x.idcarrera == Carrera && x.grupo == Grupo)
+                        .OrderBy(x => x.nombrealumno)
+                        .ToListAsync();
     }
 
     private async Task onPageChangedAsync(int newPageNumber)
