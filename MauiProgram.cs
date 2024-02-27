@@ -9,6 +9,7 @@ namespace Cecytek
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
@@ -18,6 +19,7 @@ namespace Cecytek
 
             //Cadena conexion PostgreSQL
             string CadenaPostGreSQL = "Host=ep-solitary-flower-a53pkk73-pooler.us-east-2.aws.neon.tech;Port=5432;Database=Cecytek;Username=gr200110536;Password=0GVkKlc4bCFH;sslmode=require";
+
 
             builder.Services.AddDbContext<CecytekContext>(options =>
             {

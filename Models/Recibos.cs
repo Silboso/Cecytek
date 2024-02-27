@@ -21,9 +21,8 @@ namespace Cecytek.Models
         public int idtipopago { get; set; }
         [Required]
         public decimal cantidad { get; set; }
-        [Required]
         [StringLength(255)]
-        public string url { get; set; }
+        public string url { get; set; } = "xd";
         [Required]
         public DateTime fechapago { get; set; }
         [Required]

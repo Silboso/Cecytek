@@ -1,5 +1,6 @@
 ﻿@page "/Pagos/RegistroAutomatico/{referencia}"
 @inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
 
 <TituloPagina Titulo="Registro de Pago"></TituloPagina>
 
@@ -8,7 +9,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12 d-flex justify-content-center">
-                <EditForm Model="Recibo" OnValidSubmit="Guardar">
+                <EditForm Model="Recibo" OnValidSubmit="Guardar" OnInvalidSubmit="Errorsin">
                     <DataAnnotationsValidator />
                     <div class="col-sm-12">
                         <div class="row">
@@ -50,7 +51,7 @@
                         </div>
                         <div class="row">
                             <div class="col-sm-6 mb-2">
-                                <Button Color="ButtonColor.Primary" Type="ButtonType.Submit" Disabled="true">Guardar</Button>
+                                <Button Color="ButtonColor.Primary" Type="ButtonType.Submit">Guardar</Button>
                             </div>
                         </div>
                     </div>
@@ -118,18 +119,35 @@ else
         }
     }
 
-    private void Guardar()
+    private async Task Guardar()
     {
         try
         {
             Contexto.Recibos.Add(Recibo);
             Contexto.SaveChanges();
-
+            ToastService.Notify(new(ToastType.Success, $"Recibo guardado con exito"));
+            StateHasChanged();
+            NavigationManager.NavigateTo("/Pagos");
         }
         catch (Exception ex)
         {
-
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo guardar el recibo" + ex, "Ok");
         }
+    }
 
+    private async Task Errorsin(EditContext context)
+    {
+        try
+        {
+            Contexto.Recibos.Add(Recibo);
+            Contexto.SaveChanges();
+            ToastService.Notify(new(ToastType.Success, $"Recibo guardado con exito"));
+            StateHasChanged();
+            NavigationManager.NavigateTo("/Pagos");
+        }
+        catch (Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo guardar el recibo" + ex, "Ok");
+        }
     }
 }

@@ -80,44 +80,44 @@
     {
         var csvData = new StringBuilder();
 
-// Iterar a través de cada hoja en el libro de trabajo
-for (int i = 0; i < workbook.NumberOfSheets; i++)
-{
-    var sheet = workbook.GetSheetAt(i);
-
-    // Iterar a través de cada fila en la hoja
-    for (int j = 0; j <= sheet.LastRowNum; j++)
-    {
-        var row = sheet.GetRow(j);
-
-        // Si la fila no es nula, procesar las celdas
-        if (row != null)
+        // Iterar a través de cada hoja en el libro de trabajo
+        for (int i = 0; i < workbook.NumberOfSheets; i++)
         {
-            // Iterar a través de cada celda en la fila
-            for (int k = 0; k < row.LastCellNum; k++)
+            var sheet = workbook.GetSheetAt(i);
+
+            // Iterar a través de cada fila en la hoja
+            for (int j = 0; j <= sheet.LastRowNum; j++)
             {
-                var cell = row.GetCell(k);
+                var row = sheet.GetRow(j);
 
-                // Agregar el valor de la celda al archivo CSV
-                if (cell != null)
+                // Si la fila no es nula, procesar las celdas
+                if (row != null)
                 {
-                    csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
-                }
+                    // Iterar a través de cada celda en la fila
+                    for (int k = 0; k < row.LastCellNum; k++)
+                    {
+                        var cell = row.GetCell(k);
 
-                // Agregar una coma para separar las celdas
-                csvData.Append(",");
+                        // Agregar el valor de la celda al archivo CSV
+                        if (cell != null)
+                        {
+                            csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
+                        }
+
+                        // Agregar una coma para separar las celdas
+                        csvData.Append(",");
+                    }
+
+                    // Agregar una nueva línea para separar las filas
+                    csvData.AppendLine();
+                }
             }
 
-            // Agregar una nueva línea para separar las filas
-            csvData.AppendLine();
+            // Actualizar el progreso
+
         }
-    }
 
-    // Actualizar el progreso
-   
-}
-
-return csvData.ToString();
+        return csvData.ToString();
     }
 
 
@@ -158,37 +158,37 @@ return csvData.ToString();
     // }
 
 
-//     private async Task ProcessAndSavePagosData(string csvData)
-//     {
-//        // Dividir los datos CSV en líneas
-// var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+    //     private async Task ProcessAndSavePagosData(string csvData)
+    //     {
+    //        // Dividir los datos CSV en líneas
+    // var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
-// // A toda la lista de referencias se le quita el espacio en blanco y la coma
-// for (int i = 0; i < lines.Length; i++)
-// {
-//     lines[i] = lines[i].Trim().Replace(",", "");
-// }
-// //Imprime las referencias en un mensaje
-// string mensaje = "";
-// foreach (var line in lines)
-// {
-//     mensaje += line + "\n";
-// }
-// //Busca en base de datos, por cada linea, la referencia
-// foreach (var line in lines)
-// {
-//     Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
-//     if (reciboTemp != null)
-//     {
-//         reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
-//         await Contexto.SaveChangesAsync(); // Guardar los cambios en la base de datos
-//     }
-//     else
-//     {
-       
-//     }
-//     }
-// }
+    // // A toda la lista de referencias se le quita el espacio en blanco y la coma
+    // for (int i = 0; i < lines.Length; i++)
+    // {
+    //     lines[i] = lines[i].Trim().Replace(",", "");
+    // }
+    // //Imprime las referencias en un mensaje
+    // string mensaje = "";
+    // foreach (var line in lines)
+    // {
+    //     mensaje += line + "\n";
+    // }
+    // //Busca en base de datos, por cada linea, la referencia
+    // foreach (var line in lines)
+    // {
+    //     Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
+    //     if (reciboTemp != null)
+    //     {
+    //         reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
+    //         await Contexto.SaveChangesAsync(); // Guardar los cambios en la base de datos
+    //     }
+    //     else
+    //     {
+
+    //     }
+    //     }
+    // }
 
     private async Task ProcessAndSavePagosData(string csvData)
     {
@@ -207,9 +207,9 @@ return csvData.ToString();
             mensaje += line + "\n";
         }
         //Busca en base de datos, por cada linea, la referencia
-        foreach (var line in lines)
+        foreach (var refe in lines)
         {
-            Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
+            Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == refe);
             if (reciboTemp != null)
             {
                 reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
@@ -217,16 +217,51 @@ return csvData.ToString();
             }
             else
             {
-                //Si la referencia no existe, crea un nuevo recibo y lo agrega a la base de datos
-
-            var nuevoRecibo = new Recibos
+                if (refe.Length > 16)
                 {
-                    referencia = line,
-                    estado = EstadoRecibos.Pendiente // Puedes establecer otro estado predeterminado si es necesario
-                };
-                           
+                    try
+                    {
+                        //Si la referencia no existe, dividela
+                        //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
+                        //Los siguientes 14 el no de control
+                        //El resto es la homoclave
+                        string tipoPago = refe.Substring(2, 2);
+                        string nocontrol = refe.Substring(4, 14);
+                        string homoclave = refe;
+                        //Buscar el alumno
+                        Alumnos Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
+                        TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
+                        if (Alumno != null)
+                        {
+                            Recibos recibo = new Recibos
+                                {
+                                    nocontrol = nocontrol,
+                                    fechapago = DateTime.Now,
+                                    cantidad = tipo.monto,
+                                    idtipopago = int.Parse(tipoPago),
+                                    referencia = homoclave,
+                                    descripcion = "Pagado en:" + Alumno.grado + " " + Alumno.grupo + " " + Alumno.idcarrera,
+                                    estado = EstadoRecibos.Pagado
+                                };
+                            Contexto.Recibos.Add(recibo);
+                            await Contexto.SaveChangesAsync();
+
+                        }
+                        else
+                        {
+                            await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece el nocontrol " + nocontrol + ", extraido de la referencia "+refe, "Ok");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Error", "" + ex, "Ok");
+                    }
+                }else{
+
+                }
             }
         }
+        StateHasChanged();
     }
 
 }
@@ -234,7 +269,7 @@ return csvData.ToString();
 
 
 
-            <h3>Subir lista de Alumnos</h3>
+<h3>Subir lista de Alumnos</h3>
 <InputFile OnChange="@HandleAlumnosFileChange" accept=".xls,.xlsx" />
 
 @if (!string.IsNullOrEmpty(MessageAlumnos))
