@@ -76,38 +76,36 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        
+
         PreloadService.Show();
         try
         {
-            await Task.Run((Func<Task>)(async () =>
-                {
-                    ListaTiposPago = await Contexto.TipoPago.ToListAsync();
-                    //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
-                    //Los siguientes 14 el no de control
-                    //El resto es la homoclave
-                    string tipoPago = referencia.Substring(2, 2);
-                    string nocontrol = referencia.Substring(4, 14);
-                    string homoclave = referencia;
-                    //Buscar el alumno
-                    Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
-                    TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
-                    if (Alumno != null)
+            ListaTiposPago = await Contexto.TipoPago.ToListAsync();
+            //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
+            //Los siguientes 14 el no de control
+            //El resto es la homoclave
+            string tipoPago = referencia.Substring(2, 2);
+            string nocontrol = referencia.Substring(4, 14);
+            string homoclave = referencia;
+            //Buscar el alumno
+            Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
+            TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
+            if (Alumno != null)
+            {
+                Recibo = new Recibos
                     {
-                        Recibo = new Recibos
-                        {
-                                nocontrol = nocontrol,
-                                fechapago = DateTime.Now,
-                                cantidad = tipo.monto,
-                                idtipopago = int.Parse(tipoPago),
-                                referencia = homoclave
-                            };
-                    }
-                    else 
-                    {
-                        await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece la referencia", "Ok");
-                    }
-                }));
+                        nocontrol = nocontrol,
+                        fechapago = DateTime.Now,
+                        cantidad = tipo.monto,
+                        idtipopago = int.Parse(tipoPago),
+                        referencia = homoclave,
+                        descripcion = "Pagado en:" + Alumno.grado + " " + Alumno.grupo + " " + Alumno.idcarrera
+                    };
+            }
+            else
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "No se encontro el alumno al que pertenece la referencia", "Ok");
+            }
         }
         catch (Exception ex)
         {
