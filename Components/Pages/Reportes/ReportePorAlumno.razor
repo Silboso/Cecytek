@@ -1,0 +1,25 @@
+﻿@page "/ReportePorAlumno"
+@inject CecytekContext Contexto
+@inject NavigationManager NavigationManager
+
+<TituloPagina Titulo="Reporte por alumno" />
+
+<div class="d-flex justify-content-center align-content-center">
+    <InputText @bind-Value="Busqueda" placeholder="Buscar alumno" class="m-2" />
+    <button class="btn btn-primary m-3" @onclick="BuscarAlumno">Buscar</button>
+</div>
+
+
+
+@code {
+
+    private string Busqueda { get; set; }
+
+    private async Task BuscarAlumno()
+    {
+       
+        NavigationManager.NavigateTo("/PaginaAlumnos/ConsultarAlumno/" + Busqueda);
+
+    }
+}
+

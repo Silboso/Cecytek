@@ -10,7 +10,7 @@
         <Card>
             <CardBody>
                 <CardTitle>Reporte por grupo</CardTitle>
-                <button class="btn btn-primary" @onclick="NavegarAIndexGrupos">Reporte por grupos</button>
+                <button class="btn btn-primary" @onclick="NavegarAIndexGrupos">Generar reporte</button>
 
             </CardBody>
         </Card>
@@ -19,7 +19,17 @@
         <Card>
             <CardBody>
                 <CardTitle>Reporte general</CardTitle>
-                <Button Class="btn-primary"> Generear reporte </Button>
+                <button class="btn btn-primary" @onclick="NavegarReporteGeneral">Generar reporte</button>
+              
+            </CardBody>
+        </Card>
+    </div>
+   
+    <div class="col-sm-6 mt-3">
+        <Card>
+            <CardBody>
+                <CardTitle>Reporte por alumno</CardTitle>
+                <button class="btn btn-primary" @onclick="NavegarReportePorAlumno">Generar Reporte</button>
             </CardBody>
         </Card>
     </div>
@@ -29,5 +39,13 @@
     private void NavegarAIndexGrupos()
     {
         NavigationManager.NavigateTo("/IndexGrupos");
+    }
+    private void NavegarReporteGeneral()
+    {
+        NavigationManager.NavigateTo("/ReporteGeneral");
+    }
+    private void NavegarReportePorAlumno()
+    {
+        NavigationManager.NavigateTo("/ReportePorAlumno");
     }
 }
