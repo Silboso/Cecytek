@@ -8,45 +8,39 @@
 @using System.Text
 @using Microsoft.JSInterop;
 
-<TituloPagina Titulo="Facturas" />
+<TituloPagina Titulo="Cotejamiento de Archivos" />
 
+<h3>Subir archivo de Pagos</h3>
+<InputFile OnChange="@HandlePagosFileChange" accept=".xls,.xlsx" />
 
-@* Solo admitir archivos de Excel (.xls, .xlsx): *@
-<InputFile OnChange="@HandleFileChange"  accept=".xls,.xlsx" />
-
-@if (!string.IsNullOrEmpty(Message))
+@if (!string.IsNullOrEmpty(MessagePagos))
 {
-    <div class="alert alert-info">@Message</div>
+    <div class="alert alert-info">@MessagePagos</div>
 }
 
-@if (IsProcessing)
+@if (IsProcessingPagos)
 {
     <div class="progress">
-        <div class="progress-bar" role="progressbar" style="width: @ProgressPercentage%" aria-valuenow="@ProgressPercentage" aria-valuemin="0" aria-valuemax="100">@ProgressPercentage% completado</div>
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
     </div>
 }
 
 @code {
-    private string Message { get; set; }
-    private Recibos? Recibo { get; set; }
-    private bool IsProcessing { get; set; }
-    private int ProgressPercentage { get; set; }
-    private List<TipoPago> ListaTiposPago { get; set; }
-    private Alumnos Alumno { get; set; }
+    private string MessagePagos { get; set; }
+    private bool IsProcessingPagos { get; set; }
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; }
 
-    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    private async Task HandlePagosFileChange(InputFileChangeEventArgs e)
     {
-        IsProcessing = true;
-        ProgressPercentage = 0;
+        IsProcessingPagos = true;
 
         var archivo = e.File;
         if (archivo != null)
         {
             var extension = Path.GetExtension(archivo.Name).ToLower();
-            await InvokeAsync(() => Message = $"Extension: {extension}");
+            await InvokeAsync(() => MessagePagos = $"Extension: {extension}");
             if (extension == ".xlsx" || extension == ".xls")
             {
                 var memoryStream = new MemoryStream();
@@ -61,74 +55,142 @@
 
                 if (workbook != null)
                 {
-                    await InvokeAsync(() => Message = "Workbook cargado correctamente.");
-                    // Convertir a CSV
-                    var csvData = ConvertWorkbookToCsv(workbook);
+                    await InvokeAsync(() => MessagePagos = "Workbook cargado correctamente.");
+                    // Convertir a CSV y procesar los pagos
+                    var csvData = ConvertPagosWorkbookToCsv(workbook);
+                    await ProcessAndSavePagosData(csvData);
 
-                    // Buscar homoclaves en la base de datos y actualizar estado
-                    await SearchAndUpdateReciboEstado(csvData);
-
-                    await InvokeAsync(() => Message = "Archivo subido y procesado correctamente.");
+                    await InvokeAsync(() => MessagePagos = "Archivo de pagos subido y procesado correctamente.");
                 }
             }
             else
             {
-                await InvokeAsync(() => Message = "Error: El archivo seleccionado no es un archivo de Excel válido.");
+                await InvokeAsync(() => MessagePagos = "Error: El archivo seleccionado no es un archivo de Excel válido.");
             }
         }
         else
         {
-            await InvokeAsync(() => Message = "Error: Debes seleccionar un archivo.");
+            await InvokeAsync(() => MessagePagos = "Error: Debes seleccionar un archivo.");
         }
 
-        IsProcessing = false;
+        IsProcessingPagos = false;
     }
 
-    private string ConvertWorkbookToCsv(IWorkbook workbook)
+    private string ConvertPagosWorkbookToCsv(IWorkbook workbook)
     {
         var csvData = new StringBuilder();
 
-        // Iterar a través de cada hoja en el libro de trabajo
-        for (int i = 0; i < workbook.NumberOfSheets; i++)
+// Iterar a través de cada hoja en el libro de trabajo
+for (int i = 0; i < workbook.NumberOfSheets; i++)
+{
+    var sheet = workbook.GetSheetAt(i);
+
+    // Iterar a través de cada fila en la hoja
+    for (int j = 0; j <= sheet.LastRowNum; j++)
+    {
+        var row = sheet.GetRow(j);
+
+        // Si la fila no es nula, procesar las celdas
+        if (row != null)
         {
-            var sheet = workbook.GetSheetAt(i);
-
-            // Iterar a través de cada fila en la hoja
-            for (int j = 0; j <= sheet.LastRowNum; j++)
+            // Iterar a través de cada celda en la fila
+            for (int k = 0; k < row.LastCellNum; k++)
             {
-                var row = sheet.GetRow(j);
+                var cell = row.GetCell(k);
 
-                // Si la fila no es nula, procesar las celdas
-                if (row != null)
+                // Agregar el valor de la celda al archivo CSV
+                if (cell != null)
                 {
-                    // Iterar a través de cada celda en la fila
-                    for (int k = 0; k < row.LastCellNum; k++)
-                    {
-                        var cell = row.GetCell(k);
-
-                        // Agregar el valor de la celda al archivo CSV
-                        if (cell != null)
-                        {
-                            csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
-                        }
-
-                        // Agregar una coma para separar las celdas
-                        csvData.Append(",");
-                    }
-
-                    // Agregar una nueva línea para separar las filas
-                    csvData.AppendLine();
+                    csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
                 }
+
+                // Agregar una coma para separar las celdas
+                csvData.Append(",");
             }
 
-            // Actualizar el progreso
-            ProgressPercentage = (int)(((i + 1) * 100.0) / workbook.NumberOfSheets);
+            // Agregar una nueva línea para separar las filas
+            csvData.AppendLine();
         }
-
-        return csvData.ToString();
     }
 
-    private async Task SearchAndUpdateReciboEstado(string csvData)
+    // Actualizar el progreso
+   
+}
+
+return csvData.ToString();
+    }
+
+
+    // private async Task ProcessAndSavePagosData(string csvData)
+    // {
+    //     // Dividir los datos CSV en líneas
+    //     var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+    //     // A toda la lista de referencias se le quita el espacio en blanco y la coma
+    //     for (int i = 0; i < lines.Length; i++)
+    //     {
+    //         lines[i] = lines[i].Trim().Replace(",", "");
+    //     }
+
+    //     // Iterar sobre cada línea (referencia) y procesarla
+    //     foreach (var line in lines)
+    //     {
+    //         Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
+    //         if (reciboTemp != null)
+    //         {
+    //             reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
+    //         }
+    //         else
+    //         {
+    //             // Si la referencia no existe, crea un nuevo recibo y lo agrega a la base de datos
+    //             // var nuevoRecibo = new Recibos
+    //             //     {
+    //             //         referencia = line,
+    //             //         estado = EstadoRecibos.Pagado // Puedes establecer otro estado predeterminado si es necesario
+
+    //             //     };
+    //             // Contexto.Recibos.Add(nuevoRecibo);
+    //         }
+    //     }
+
+    //     // Guardar los cambios en la base de datos
+    //     await Contexto.SaveChangesAsync();
+    // }
+
+
+//     private async Task ProcessAndSavePagosData(string csvData)
+//     {
+//        // Dividir los datos CSV en líneas
+// var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+// // A toda la lista de referencias se le quita el espacio en blanco y la coma
+// for (int i = 0; i < lines.Length; i++)
+// {
+//     lines[i] = lines[i].Trim().Replace(",", "");
+// }
+// //Imprime las referencias en un mensaje
+// string mensaje = "";
+// foreach (var line in lines)
+// {
+//     mensaje += line + "\n";
+// }
+// //Busca en base de datos, por cada linea, la referencia
+// foreach (var line in lines)
+// {
+//     Recibos reciboTemp = await Contexto.Recibos.FirstOrDefaultAsync(r => r.referencia.Trim() == line);
+//     if (reciboTemp != null)
+//     {
+//         reciboTemp.estado = EstadoRecibos.Pagado; // Cambia el estado del recibo según lo necesario
+//         await Contexto.SaveChangesAsync(); // Guardar los cambios en la base de datos
+//     }
+//     else
+//     {
+       
+//     }
+//     }
+// }
+
+    private async Task ProcessAndSavePagosData(string csvData)
     {
         // Dividir los datos CSV en líneas
         var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
@@ -155,68 +217,159 @@
             }
             else
             {
-                //Envia alerta de que no se encontro la referencia
-                // await Application.Current.MainPage.DisplayAlert("Aviso", "No se encontraron las referencias: " + lines.ToString, "OK");
+                //Si la referencia no existe, crea un nuevo recibo y lo agrega a la base de datos
 
-    //             try
-    //             {
-    //                 await Task.Run((Func<Task>)(async () =>
-    //                     {
-    //                         Recibos recibo = new Recibos();
-    //                         var r = recibo.referencia = line;
-    //                         recibo.estado = EstadoRecibos.Pagado;// o EstadoRecibos.Pendiente?
-    //                         await Contexto.Recibos.AddAsync(recibo);
-    //                         await Contexto.SaveChangesAsync();
-
-    //                         // si la referencia es mayor o menos a 20 caracteres, no se procesa
-    //                         if (r.Length != 23)
-    //                         {
-    //                             await Application.Current.MainPage.DisplayAlert("Aviso", "La referencia "+r+" no es válida", "OK");
-    //                             return;
-    //                         }
-    //                         else
-    //                         {
-                            
+            var nuevoRecibo = new Recibos
+                {
+                    referencia = line,
+                    estado = EstadoRecibos.Pendiente // Puedes establecer otro estado predeterminado si es necesario
+                };
                            
-
-    //                 ListaTiposPago = await Contexto.TipoPago.ToListAsync();
-    //                 //Separar la referencia en 3 partes, el tercer y cuarto digito es el tipo de pago
-    //                 //Los siguientes 14 el no de control
-    //                 //El resto es la homoclave
-    //                         string tipoPago = r.Substring(2, 2);
-    //                         string nocontrol = r.Substring(4, 14);
-    //                         string homoclave = r.Substring(18);
-    //                 //Buscar el alumno
-    //                 Alumno = await Contexto.Alumnos.Where(x => x.nocontrol == nocontrol).FirstOrDefaultAsync();
-    //                 TipoPago tipo = await Contexto.TipoPago.Where(x => x.idtipopago == int.Parse(tipoPago)).FirstOrDefaultAsync();
-    //                 if (Alumno != null)
-    //                 {
-    //                     Recibo = new Recibos
-    //                         {
-    //                             nocontrol = nocontrol,
-    //                             fechapago = DateTime.Now,
-    //                             cantidad = tipo.monto,
-    //                             idtipopago = int.Parse(tipoPago),
-    //                             referencia = homoclave
-    //                         };
-    //                 }
-    //                         }
-    //                     }));
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         //mostrar en pantalla el error y las referencias que no se pudieron registrar
-    //                 await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar algunas referencias " + ex, "Ok");
-
-    //                 // //Mostrar mensaje de error en pantalla
-    //                 // await Application.Current.MainPage.DisplayAlert("Error", "No se pudieron cargar las formas de cobro " + ex, "Ok");
-    //     }
-
-    }
-
             }
         }
-        
-
     }
-    
+
+}
+
+
+
+
+            <h3>Subir lista de Alumnos</h3>
+<InputFile OnChange="@HandleAlumnosFileChange" accept=".xls,.xlsx" />
+
+@if (!string.IsNullOrEmpty(MessageAlumnos))
+{
+    <div class="alert alert-info">@MessageAlumnos</div>
+}
+
+@if (IsProcessingAlumnos)
+{
+    <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+}
+
+@code {
+    private string MessageAlumnos { get; set; }
+    private bool IsProcessingAlumnos { get; set; }
+
+    private async Task HandleAlumnosFileChange(InputFileChangeEventArgs e)
+    {
+        IsProcessingAlumnos = true;
+
+        var archivo = e.File;
+        if (archivo != null)
+        {
+            var extension = Path.GetExtension(archivo.Name).ToLower();
+            await InvokeAsync(() => MessageAlumnos = $"Extension: {extension}");
+            if (extension == ".xlsx" || extension == ".xls")
+            {
+                var memoryStream = new MemoryStream();
+                await archivo.OpenReadStream().CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+
+                IWorkbook workbook = null;
+                if (extension == ".xlsx")
+                    workbook = new XSSFWorkbook(memoryStream);
+                else if (extension == ".xls")
+                    workbook = new HSSFWorkbook(memoryStream);
+
+                if (workbook != null)
+                {
+                    await InvokeAsync(() => MessageAlumnos = "Workbook cargado correctamente.");
+                    // Convertir a CSV y procesar los datos de los alumnos
+                    var csvData = ConvertAlumnosWorkbookToCsv(workbook);
+                    await ProcessAndSaveAlumnosData(csvData);
+
+                    await InvokeAsync(() => MessageAlumnos = "Archivo de alumnos subido y procesado correctamente.");
+                }
+            }
+            else
+            {
+                await InvokeAsync(() => MessageAlumnos = "Error: El archivo seleccionado no es un archivo de Excel válido.");
+            }
+        }
+        else
+        {
+            await InvokeAsync(() => MessageAlumnos = "Error: Debes seleccionar un archivo.");
+        }
+
+        IsProcessingAlumnos = false;
+    }
+
+    private string ConvertAlumnosWorkbookToCsv(IWorkbook workbook)
+    {
+        var csvData = new StringBuilder();
+
+        var sheet = workbook.GetSheetAt(0); // Suponemos que los datos de los alumnos están en la primera hoja
+
+        // Iterar a través de cada fila en la hoja, ignorando el encabezado
+        for (int j = 0; j <= sheet.LastRowNum; j++)
+        {
+            var row = sheet.GetRow(j);
+
+            // Si la fila no es nula, procesar las celdas
+            if (row != null)
+            {
+                // Iterar a través de cada celda en la fila
+                for (int k = 0; k < row.LastCellNum; k++)
+                {
+                    var cell = row.GetCell(k);
+
+                    // Agregar el valor de la celda al archivo CSV
+                    if (cell != null)
+                    {
+                        csvData.Append(cell.ToString().Trim()); // Asegúrate de que no haya espacios en blanco alrededor del valor
+                    }
+
+                    // Agregar una coma para separar las celdas
+                    csvData.Append(",");
+                }
+
+                // Agregar una nueva línea para separar las filas
+                csvData.AppendLine();
+            }
+        }
+
+        return csvData.ToString();
+    }
+
+    private async Task ProcessAndSaveAlumnosData(string csvData)
+    {
+        // Dividir los datos CSV en líneas
+        var lines = csvData.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+
+        // Iterar a través de las líneas, ignorando el encabezado
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i == 0) // Ignorar el encabezado en la primera línea
+                continue;
+
+            var columns = lines[i].Split(',');
+
+            if (columns.Length >= 6) // Asegurarse de que hay suficientes columnas
+            {
+                var alumno = new Alumnos
+                    {
+                        nocontrol = columns[0].Trim(),
+                        nombrealumno = columns[1].Trim(),
+                        grado = (Grados)Enum.Parse(typeof(Grados), columns[2].Trim(), true),
+                        grupo = columns[3].Trim(),
+                        idcarrera = int.Parse(columns[4].Trim()),
+                        turno = (Turnos)Enum.Parse(typeof(Turnos), columns[5].Trim(), true),
+                        estado = Estado.Inactivo // Se puede establecer un valor predeterminado
+                    };
+
+                // Guardar el alumno en la base de datos
+                await Contexto.Alumnos.AddAsync(alumno);
+            }
+        }
+
+        // Guardar los cambios en la base de datos
+        await Contexto.SaveChangesAsync();
+    }
+
+
+
+}
+
