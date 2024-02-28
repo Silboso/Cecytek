@@ -6,6 +6,7 @@
 @if (ListaGrados?.Count > 0)
 {
     <TituloPaginaIndex Titulo="Alumnos" Url="/Alumnos/Create" />
+    <Button Color="ButtonColor.Primary" class="m-2" @onclick="BusquedaGeneral">Todos</Button>
     <div class="d-flex flex-wrap" style="max-width: 90vw">
         @foreach (var Carrera in ListaCarreras)
         {
@@ -171,6 +172,9 @@ else
         NavigationManager.NavigateTo("/Alumnos/Index/" + grado + "/" + carrera + "/" + grupo);
     }
 
-
+    private void BusquedaGeneral()
+    {
+        NavigationManager.NavigateTo("/Alumnos/Buscar");
+    }
 
 }

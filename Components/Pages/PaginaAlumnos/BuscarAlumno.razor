@@ -1,0 +1,137 @@
+﻿@page "/Alumnos/Buscar"
+@inject CecytekContext Contexto
+
+<TituloPagina Titulo="Buscar Alumno"></TituloPagina>
+
+<InputText @bind-Value="Busqueda" @onkeypress="BuscarAlumnoGeneral" @oninput="ActualizarBusqueda" placeholder="Buscar alumno" class="m-2" />
+
+
+@if (ListaAlumnos?.Count > 0)
+{
+    <table class="table table-striped table-hover table-responsive">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">No. Control</th>
+                <th scope="col">Nombre del Alumno</th>
+                <th score="col">Estado</th>
+                <th scope="col">Grupo</th>
+                <th scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var Alumno in ListaAlumnos.Skip((currentPageNumber - 1) * itemsPerPage).Take(itemsPerPage))
+            {
+                <tr>
+                    <!-- Muestra la posicion en la lista-->
+                    <th scope="row">@(ListaAlumnos.IndexOf(Alumno) + 1)</th>
+                    <th scope="row">@Alumno.nocontrol</th>
+                    <td>@Alumno.nombrealumno</td>
+                    <td>@Alumno.estado</td>
+                    <td>@Alumno.grupo</td>
+                    <td>
+                        <!--Boton informacion-->
+                        <a class="btn btn-primary" href="Alumnos/Info/@Alumno.idalumno">
+                            <i class="bi bi-info"></i>
+                        </a>
+                        <a class="btn btn-secondary" href="Alumnos/Editar/@Alumno.idalumno">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="d-flex justify-content-center">
+        <!-- Agrega el componente de paginación -->
+        <Pagination ActivePageNumber="@currentPageNumber"
+                    TotalPages="totalPages"
+                    PageChanged="onPageChangedAsync"
+                    FirstLinkIcon="IconName.ChevronDoubleLeft"
+                    PreviousLinkIcon="IconName.ChevronLeft"
+                    NextLinkIcon="IconName.ChevronRight"
+                    LastLinkIcon="IconName.ChevronDoubleRight" />
+    </div>
+}
+
+@code {
+    [Inject] protected PreloadService PreloadService { get; set; }
+    private List<Alumnos> ListaAlumnos { get; set; }
+    private string Busqueda { get; set; }
+    private int currentPageNumber = 1;
+    private int itemsPerPage = 15; // Cantidad de registros por página
+    int totalPages => (int)Math.Ceiling(ListaAlumnos.Count / (double)itemsPerPage);
+
+    protected override async Task OnInitializedAsync()
+    {
+        PreloadService.Show();
+        try
+        {
+            //Trae los alumnos cuyo estado no sea 0, 2 y 5
+            ListaAlumnos = await Contexto.Alumnos.Where(x => x.estado != Estado.Baja && x.estado != Estado.Graduado && x.estado != Estado.Inactivo).ToListAsync();
+        }catch(Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", ex.Message, "Aceptar");
+        }
+        finally
+        {
+            PreloadService.Hide();
+        }
+    }
+
+    private async Task onPageChangedAsync(int newPageNumber)
+    {
+        currentPageNumber = newPageNumber;
+        StateHasChanged(); // Asegúrate de forzar la actualización de la interfaz de usuario
+    }
+
+    private async Task BuscarAlumnoGeneral(KeyboardEventArgs evt)
+    {
+        //Si la tecla presionada es enter, busca el alumno
+        if (evt.Key == "Enter")
+        {
+            try
+            {
+                //Convierte en mayusculas el texto ingresado en el campo de busqueda
+                Busqueda.ToUpper();
+                //Si el campo de busqueda esta vacio, regresa la lista de alumnos completa
+                if (string.IsNullOrEmpty(Busqueda.ToUpper()))
+                {
+                    ListaAlumnos = await Contexto.Alumnos.Where(x => x.estado != Estado.Baja && x.estado != Estado.Graduado && x.estado != Estado.Inactivo).ToListAsync();
+
+                }
+                else
+                {
+                    //Si el campo de busqueda no esta vacio, busca el alumno por nombre o por numero de control
+                    ListaAlumnos = await Contexto.Alumnos
+                                        .Where(x => (x.nombrealumno.Contains(Busqueda.ToUpper()) || x.nocontrol.Contains(Busqueda.ToUpper())))
+                        .OrderBy(x => x.nombrealumno)
+                        .ToListAsync();
+                    currentPageNumber = 1;
+                }
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                await Application.Current.MainPage.DisplayAlert("Error", "" + ex, "Ok");
+            }
+        }
+    }
+
+    private async Task ActualizarBusqueda(ChangeEventArgs e)
+    {
+        Busqueda = e.Value.ToString();
+        await BuscarAlumnoGeneral(new KeyboardEventArgs());
+
+        if (string.IsNullOrEmpty(Busqueda))
+        {
+            await Reiniciar();
+        }
+    }
+
+    private async Task Reiniciar()
+    {
+        ListaAlumnos = await Contexto.Alumnos.Where(x => x.estado != Estado.Baja && x.estado != Estado.Graduado && x.estado != Estado.Inactivo).ToListAsync();
+
+    }
+}
