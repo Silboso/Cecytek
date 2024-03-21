@@ -15,10 +15,21 @@
 
     private string Busqueda { get; set; }
 
+
     private async Task BuscarAlumno()
     {
-       
-        NavigationManager.NavigateTo("/PaginaAlumnos/ConsultarAlumno/" + Busqueda);
+        try
+        {
+            int idalumno;
+            if (int.TryParse(Busqueda, out idalumno))
+            {
+                // Si la conversión es exitosa, navegar con el ID de alumno.
+                NavigationManager.NavigateTo($"/PaginaAlumnos/Alumnos/Info/{idalumno}");
+            }
+        } catch (Exception ex)
+        {
+            await Application.Current.MainPage.DisplayAlert("Error", "No se pudo buscar el alumno" + ex, "Ok");
+        }
 
     }
 }

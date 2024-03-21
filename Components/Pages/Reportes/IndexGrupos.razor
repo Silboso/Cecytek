@@ -137,19 +137,12 @@ else
         PreloadService.Show();
         try
         {
-            //Trae un alumno de cada grupo de la carrera y grado seleccionado
+    
             GruposActivos = await Contexto.Alumnos
                         .Where(x => x.grado == grado && x.idcarrera == carrera && x.estado != Estado.Inactivo && x.estado != Estado.Baja && x.estado != Estado.Graduado)
                         .GroupBy(x => x.grupo)
                         .Select(x => x.FirstOrDefault())
                         .ToListAsync();
-            // Muestra en un display Alert el grado, la carrea y el grupo, por ejemplo ° A de la carrera de Ing. en Sistemas
-            // string mensaje = "";
-            // foreach (var item in GruposActivos)
-            // {
-            //     mensaje += "° " + item.grupo + " de la carrera de " + Contexto.Carreras.Where(x => x.idcarrera == item.idcarrera).FirstOrDefault().nombrecarrera + "\n";
-            // }
-            // await Application.Current.MainPage.DisplayAlert("Grupos Activos", mensaje, "Ok");
             Acordeon = +1;
         }
         catch (Exception ex)

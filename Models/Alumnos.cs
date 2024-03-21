@@ -44,6 +44,8 @@ namespace Cecytek.Models
         [Required]
         public Estado estado { get; set; }
 
+       
+
     }
 
     public enum Grados
